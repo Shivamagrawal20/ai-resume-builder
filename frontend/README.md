@@ -65,3 +65,37 @@ npm run preview  # serve dist/ locally to test production build
 - **API errors / network errors** — Ensure the backend is running on port 4000 and MongoDB is reachable.
 - **CORS in dev** — Usually unnecessary because of the Vite proxy; if you call a full API URL from the browser, the backend must allow that origin.
 - **401 after refresh** — Token invalid or expired; log in again.
+
+---
+
+## Frontend function reference
+
+**15** named functions. Paths are relative to [`frontend/`](.) (e.g. [`src/App.jsx`](src/App.jsx)). [`App.css`](src/App.css) has **no** functions.
+
+### [`src/api.js`](src/api.js)
+
+| Function | What it does |
+|----------|----------------|
+| [`getToken`](src/api.js) | Reads JWT from `localStorage` key `arb_token`. |
+| [`setToken`](src/api.js) | Saves or removes the JWT in `localStorage`. |
+| [`url`](src/api.js) | If `VITE_API_URL` is set, prefixes API paths with that origin; otherwise returns the path (relative, for Vite proxy in dev). |
+| [`request`](src/api.js) | `fetch` wrapper: JSON headers, attaches `Authorization` when a token exists, parses JSON (skips body on `204`), throws on non-OK with `err.message` from API. |
+
+### [`src/App.jsx`](src/App.jsx)
+
+| Function | What it does |
+|----------|----------------|
+| [`App`](src/App.jsx) | Root component: auth state, resume list/editor, AI panel; routes between login UI and main UI. |
+| [`loadMe`](src/App.jsx) | `useCallback`: calls `api.me()`, sets `user`. |
+| [`loadResumes`](src/App.jsx) | `useCallback`: calls `api.listResumes()`, sets `resumes`. |
+| [`handleAuth`](src/App.jsx) | Form submit: register or login via `api`, stores token + user, refreshes resume list. |
+| [`logout`](src/App.jsx) | Clears token, user, resumes, selection, AI output. |
+| [`openResume`](src/App.jsx) | Fetches one resume by id, fills title/editor and AI context. |
+| [`saveResume`](src/App.jsx) | Parses `contentJson`; if invalid JSON shows error; else create or PATCH resume. |
+| [`newResume`](src/App.jsx) | Clears selection and resets title/content to a new draft. |
+| [`removeResume`](src/App.jsx) | Confirms delete, calls `api.deleteResume`, reloads list, resets draft. |
+| [`runAi`](src/App.jsx) | Tries `JSON.parse` on AI context; on failure uses raw string; calls `api.aiSuggest`, shows suggestion. |
+
+### [`src/main.jsx`](src/main.jsx)
+
+No named functions—only `ReactDOM.createRoot(...).render(...)` with [`App`](src/App.jsx) inside `StrictMode`.
