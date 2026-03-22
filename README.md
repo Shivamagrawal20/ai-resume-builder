@@ -1,0 +1,80 @@
+# AI Resume Builder
+
+A small full-stack app: a **React** web UI talks to a **Node.js** API that stores resumes in **MongoDB** and can call **OpenAI** for section suggestions.
+
+## What’s in this repo
+
+| Folder | Role |
+|--------|------|
+| **`backend/`** | REST API: auth (JWT), resume CRUD, AI suggest endpoint |
+| **`frontend/`** | React + Vite SPA: login/register, edit resumes, AI suggest UI |
+
+See **`backend/README.md`** and **`frontend/README.md`** for how each part works and how to talk about them in demos or interviews.
+
+## Architecture (high level)
+
+```text
+Browser (React)
+    │  HTTPS / fetch (dev: Vite proxies /api → backend)
+    ▼
+Express API (Node)
+    ├── JWT + bcrypt for auth
+    ├── Mongoose → MongoDB (users + resumes)
+    └── OpenAI SDK (optional) for /api/ai/suggest
+```
+
+## Prerequisites
+
+- **Node.js** (LTS recommended)
+- **MongoDB** running locally or a connection string (e.g. MongoDB Atlas)
+- **OpenAI API key** (optional; only needed for AI suggestions)
+
+## Quick start
+
+### 1. Backend
+
+```bash
+cd backend
+cp .env.example .env
+# Edit .env: set MONGODB_URI, JWT_SECRET, and optionally OPENAI_API_KEY
+npm install
+npm run dev
+```
+
+API listens on **http://localhost:4000** by default (`GET /health` to verify).
+
+### 2. Frontend
+
+In a **second** terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the URL Vite prints (usually **http://localhost:5173**). In development, the Vite dev server **proxies** `/api` to the backend so the UI can call `/api/...` without CORS issues.
+
+### 3. Production build (frontend)
+
+```bash
+cd frontend
+npm run build
+```
+
+Serve the `frontend/dist/` static files with any static host. Set **`VITE_API_URL`** to your API’s public URL (see `frontend/README.md`).
+
+## How to explain the project (short)
+
+**One sentence:**  
+“It’s a resume builder where users sign in, save resume data as JSON in MongoDB, and optionally get AI-suggested text for a section using OpenAI.”
+
+**Thirty seconds:**  
+“Frontend is React with Vite; it stores a JWT after login and calls REST endpoints. Backend is Express with Mongoose: users and resumes are separate collections, resumes are scoped by `userId`. The AI route uses the OpenAI API when the key is configured.”
+
+**Two minutes:**  
+Walk through: **auth** (register → hash password, login → JWT), **resumes** (CRUD only for the logged-in user), **AI** (POST with section + context → model returns suggestion). Mention **security** (JWT + HTTPS in production, secrets in env) and **what you’d add next** (rate limits, PDF export, password reset).
+
+## License
+
+Private / your choice — add a `LICENSE` file if you open-source the repo.
