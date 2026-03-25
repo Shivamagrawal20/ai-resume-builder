@@ -13,3 +13,5 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
   openaiApiKey: process.env.OPENAI_API_KEY ?? "",
 };
+
+
