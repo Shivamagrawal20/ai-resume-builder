@@ -1,4 +1,5 @@
-# Netlify hosts the static frontend only. Run the Node API on another host and set VITE_API_URL to that API origin at build time.
+# Frontend only — API runs elsewhere. Required: VITE_API_URL = your API origin (https://…, no trailing slash), same for Production + Deploy previews you use.
+# Build also writes dist/_redirects to proxy /api/* for public HTML pages.
 
 [build]
   base = "frontend"
