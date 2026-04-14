@@ -1,0 +1,9 @@
+# Netlify hosts the static frontend only. Run the Node API on another host and set VITE_API_URL to that API origin at build time.
+
+[build]
+  base = "frontend"
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
