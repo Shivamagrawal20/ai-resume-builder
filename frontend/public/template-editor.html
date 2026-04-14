@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LetsResume - Template Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f4f0;--surface:#fff;--ink:#111118;--muted:#888898;--border:#e2e1db;--blue:#2563eb;--green:#16a34a;--accent:#c8f135;--accent-dark:#0a0a0f;--resume-accent:#2563eb}
+html,body{height:100%} body{font-family:'Familjen Grotesk',sans-serif;background:var(--bg);color:var(--ink)}
+#wizard{position:fixed;inset:0;background:rgba(17,17,24,.7);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+.wiz-card{background:#fff;border-radius:20px;width:min(880px,96vw);overflow:hidden}.wiz-top{background:linear-gradient(135deg,#1e1b4b,#312e81);padding:30px;color:#fff;text-align:center}
+.wiz-body{padding:28px}.wiz-step{display:none}.wiz-step.active{display:block}.wiz-q{font-size:18px;font-weight:700;margin-bottom:8px}.wiz-hint{font-size:13px;color:var(--muted);margin-bottom:16px}
+.color-grid{display:flex;gap:10px;flex-wrap:wrap}.color-swatch{width:42px;height:42px;border-radius:50%;border:3px solid transparent;cursor:pointer}.color-swatch.selected{border-color:#fff;box-shadow:0 0 0 2px var(--blue)}
+.wiz-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wiz-option-grid.wiz-layout-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:900px){.wiz-option-grid.wiz-layout-grid{grid-template-columns:1fr}}
+.wiz-thumb-img{width:100%;height:100%;object-fit:cover;display:block;border-radius:9px}
+.wiz-thumb{padding:0;overflow:hidden;background:#f8fafc}
+.wiz-option{border:1.5px solid var(--border);border-radius:14px;padding:10px;cursor:pointer;background:#fff;transition:.2s ease}
+.wiz-option:hover{border-color:#bfdbfe;transform:translateY(-1px)}
+.wiz-option.selected{border-color:var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.18)}
+.wiz-thumb{height:86px;border-radius:10px;border:1px solid #e5e7eb;margin-bottom:8px;background:#f3f4f6;position:relative;overflow:hidden}
+.wiz-thumb .tbar{height:14px;background:#e5e7eb}
+.wiz-thumb .tline{height:5px;background:#d1d5db;border-radius:999px;margin:6px 10px 0}
+.wiz-thumb.modern{background:linear-gradient(135deg,#f8fafc,#dbeafe)}
+.wiz-thumb.classic{background:linear-gradient(135deg,#fff,#f3f4f6)}
+.wiz-thumb.creative{background:linear-gradient(135deg,#f5f3ff,#ede9fe)}
+.wiz-thumb.photo-on::after{content:"";position:absolute;right:10px;top:20px;width:24px;height:24px;border-radius:50%;background:#cbd5e1}
+.wiz-thumb.photo-off::after{content:"";position:absolute;right:8px;top:18px;width:28px;height:28px;border-radius:50%;border:2px dashed #cbd5e1}
+.wiz-thumb.tech{background:linear-gradient(135deg,#ecfeff,#cffafe)}
+.wiz-thumb.business{background:linear-gradient(135deg,#f8fafc,#e2e8f0)}
+.wiz-thumb.marketing{background:linear-gradient(135deg,#fff7ed,#fed7aa)}
+.wiz-thumb.design{background:linear-gradient(135deg,#fdf4ff,#f5d0fe)}
+.wiz-opt-title{font-size:13px;font-weight:700;color:#111827}
+.wiz-opt-sub{font-size:12px;color:#6b7280;margin-top:2px}
+.wiz-footer{display:flex;justify-content:space-between;padding:16px 28px;border-top:1px solid var(--border)} .wbtn{padding:10px 18px;border-radius:999px;border:none;cursor:pointer;font-weight:600}
+.wbtn.back{border:1px solid var(--border);background:#fff}.wbtn.next{background:var(--blue);color:#fff}
+#app{display:none;height:100%}.app-shell{display:flex;height:100%}
+.step-nav{width:230px;background:var(--accent-dark);padding:18px 12px}.sn-logo{color:#fff;font-size:18px;font-weight:700;padding:6px 10px 16px}.sn-logo span{color:var(--accent)}
+.sn-step{display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;cursor:pointer;margin-bottom:6px}.sn-step.active{background:rgba(200,241,53,.12)}
+.sn-step.done .sn-num{background:var(--green);color:#fff}.sn-step.active .sn-num{background:var(--accent);color:#111}
+.sn-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-weight:700}
+.sn-label{color:rgba(255,255,255,.5)}.sn-step.active .sn-label{color:#fff}
+.editor-layout{display:flex;flex:1;min-width:0}
+.editor-form-panel{width:520px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.efp-header{padding:18px 20px;border-bottom:1px solid var(--border)}.efp-title{font-size:22px;font-weight:700}.efp-sub{font-size:13px;color:var(--muted);margin-top:4px}
+.save-hint{font-size:12px;color:#6b7280;margin-top:8px}
+.efp-body{flex:1;overflow:auto;padding:20px}.efp-step{display:none}.efp-step.active{display:block}
+.efp-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between}
+.efp-nav-btn{padding:10px 18px;border-radius:999px;border:none;cursor:pointer;font-weight:600}.efp-nav-btn.back{border:1px solid var(--border);background:#fff}.efp-nav-btn.next{background:var(--blue);color:#fff}
+.finalize-actions{display:flex;gap:8px;align-items:center;margin-top:12px}
+.success-card{border:1.5px solid #bbf7d0;background:#f0fdf4;border-radius:12px;padding:14px;margin-top:12px}
+.success-title{font-size:14px;font-weight:700;color:#166534}
+.success-sub{font-size:12px;color:#166534;margin-top:4px}
+.ats-box{margin-top:14px;border:1px solid var(--border);border-radius:12px;padding:12px;background:#fafafa}
+.ats-title{font-size:13px;font-weight:700;margin-bottom:8px}
+.ats-textarea{width:100%;min-height:92px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px}
+.ats-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.ats-score{font-size:18px;font-weight:700}
+.ats-chip{border-radius:999px;padding:4px 10px;font-size:11px;background:#e5e7eb}
+.ats-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.ats-item{background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px}
+.ats-item-title{font-size:11px;color:#6b7280}
+.ats-item-value{font-size:14px;font-weight:700}
+.ats-suggestion{margin-top:8px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px}
+.ats-suggestion p{font-size:12px;color:#374151;line-height:1.5}
+.ats-example{margin-top:6px;background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:8px;font-size:12px;color:#111827}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.form-row.single{grid-template-columns:1fr}
+.fg label{display:block;font-size:12px;font-weight:600;color:#3a3a4a;margin-bottom:5px}.fg input,.fg textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px}
+.fg textarea{min-height:90px;resize:vertical}
+.entry-card{border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;background:#fafafa}
+.entry-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.entry-title{font-size:13px;font-weight:700;color:#3a3a4a}
+.tiny-btn{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:12px}
+.tiny-btn.add{border-color:#bfdbfe;color:#2563eb}
+.tiny-btn.remove{border-color:#fecaca;color:#dc2626}
+.preview-panel{flex:1;display:flex;flex-direction:column;min-width:0;background:#e8e7e2}
+.custom-toolbar{padding:10px 16px;background:#fff;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center}
+.ct-color{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer}.ct-color.active{border-color:#111}
+.pp-scroll{flex:1;overflow:auto;display:flex;justify-content:center;padding:24px}.resume-sheet{width:560px;min-height:792px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.resume-modern .rm-head{background:var(--resume-accent);color:#fff;padding:28px 32px}.resume-modern .rm-name{font-size:26px;font-weight:700}.resume-modern .rm-role{font-size:13px;opacity:.85;margin-bottom:8px}
+.resume-modern .rm-contact{display:flex;gap:16px;font-size:11px;opacity:.8}.resume-modern .rm-body{padding:24px 32px;display:flex;flex-direction:column;gap:16px}
+.resume-modern .rm-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--resume-accent);border-bottom:2px solid var(--resume-accent);padding-bottom:4px;margin-bottom:8px}
+.resume-modern .rm-entry-title{font-size:13px;font-weight:700}.resume-modern .rm-entry-sub{font-size:11px;color:#777;margin-bottom:4px}.resume-modern .rm-text,.resume-modern .rm-entry-desc{font-size:12px;color:#555;line-height:1.6}
+.resume-modern.layout-classic .rm-head{background:#111827}
+.resume-modern.layout-creative .rm-head{background:linear-gradient(135deg,var(--resume-accent),#7c3aed)}
+.rm-head-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.rm-photo{width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-weight:700}
+.rm-skills{display:flex;flex-wrap:wrap;gap:6px}.rm-skill{background:#f0f4ff;color:var(--resume-accent);border-radius:100px;padding:3px 10px;font-size:11px}
+@media (max-width:1000px){.step-nav{display:none}.editor-form-panel{width:100%}.preview-panel{display:none}}
+</style>
+</head>
+<body>
+<div id="wizard">
+  <div class="wiz-card">
+    <div class="wiz-top"><h2>Let's build your perfect resume</h2><p>Answer 4 quick questions to get your ideal template</p></div>
+    <div class="wiz-body">
+      <div class="wiz-step active" id="ws0"><div class="wiz-q">Pick your accent color</div><div class="wiz-hint">We'll use this throughout your resume.</div><div class="color-grid">
+        <div class="color-swatch selected" style="background:#2563eb" data-color="#2563eb" onclick="pickColor(this)"></div><div class="color-swatch" style="background:#111118" data-color="#111118" onclick="pickColor(this)"></div><div class="color-swatch" style="background:#7c3aed" data-color="#7c3aed" onclick="pickColor(this)"></div><div class="color-swatch" style="background:#dc2626" data-color="#dc2626" onclick="pickColor(this)"></div>
+      </div></div>
+      <div class="wiz-step" id="ws1"><div class="wiz-q">Which layout do you prefer?</div><div class="wiz-hint">Modern uses structured steps here. Live options open the on-page editor — classic, split sidebar, or GLA single-column ATS format.</div>
+        <div class="wiz-option-grid wiz-layout-grid">
+          <div class="wiz-option selected" data-group="layout" data-value="modern" onclick="pickWizardOption(this)"><div class="wiz-thumb"><img class="wiz-thumb-img" src="/wizard/layout-modern.svg" width="320" height="180" alt=""/></div><div class="wiz-opt-title">Modern</div><div class="wiz-opt-sub">Guided steps, ATS-friendly layout</div></div>
+          <div class="wiz-option" data-group="layout" data-value="live-editor" onclick="pickWizardOption(this)"><div class="wiz-thumb"><img class="wiz-thumb-img" src="/wizard/layout-live.svg" width="320" height="180" alt=""/></div><div class="wiz-opt-title">Live Editor</div><div class="wiz-opt-sub">Edit on the page like a document</div></div>
+          <div class="wiz-option" data-group="layout" data-value="live-editor-split" onclick="pickWizardOption(this)"><div class="wiz-thumb"><img class="wiz-thumb-img" src="/wizard/layout-split.svg" width="320" height="180" alt=""/></div><div class="wiz-opt-title">Live — Split</div><div class="wiz-opt-sub">Teal sidebar + main content</div></div>
+          <div class="wiz-option" data-group="layout" data-value="gla-resume" onclick="pickWizardOption(this)"><div class="wiz-thumb"><img class="wiz-thumb-img" src="/wizard/layout-gla.svg" width="320" height="180" alt=""/></div><div class="wiz-opt-title">GLA Resume</div><div class="wiz-opt-sub">Single column, dense ATS (GLA-style)</div></div>
+        </div>
+      </div>
+      <div class="wiz-step" id="ws2"><div class="wiz-q">Include a photo?</div><div class="wiz-hint">Optional in most regions.</div>
+        <div class="wiz-option-grid">
+          <div class="wiz-option selected" data-group="photo" data-value="no" onclick="pickWizardOption(this)"><div class="wiz-thumb photo-off"><div class="tbar"></div><div class="tline" style="width:75%"></div><div class="tline" style="width:85%"></div></div><div class="wiz-opt-title">No Photo</div><div class="wiz-opt-sub">Recommended for ATS</div></div>
+          <div class="wiz-option" data-group="photo" data-value="yes" onclick="pickWizardOption(this)"><div class="wiz-thumb photo-on"><div class="tbar"></div><div class="tline" style="width:65%"></div><div class="tline" style="width:80%"></div></div><div class="wiz-opt-title">Include Photo</div><div class="wiz-opt-sub">For creative/global roles</div></div>
+        </div>
+      </div>
+      <div class="wiz-step" id="ws3"><div class="wiz-q">What field is this resume for?</div><div class="wiz-hint">We’ll preload role-relevant keywords, skills, and summary wording you can edit anytime.</div>
+        <div class="wiz-option-grid">
+          <div class="wiz-option selected" data-group="field" data-value="tech" onclick="pickWizardOption(this)"><div class="wiz-thumb tech"><div class="tbar"></div><div class="tline" style="width:82%"></div><div class="tline" style="width:70%"></div></div><div class="wiz-opt-title">Technology</div><div class="wiz-opt-sub">Software, data, cloud, DevOps</div></div>
+          <div class="wiz-option" data-group="field" data-value="business" onclick="pickWizardOption(this)"><div class="wiz-thumb business"><div class="tbar"></div><div class="tline" style="width:76%"></div><div class="tline" style="width:66%"></div></div><div class="wiz-opt-title">Business</div><div class="wiz-opt-sub">Strategy, ops, finance, PM</div></div>
+          <div class="wiz-option" data-group="field" data-value="marketing" onclick="pickWizardOption(this)"><div class="wiz-thumb marketing"><div class="tbar"></div><div class="tline" style="width:74%"></div><div class="tline" style="width:88%"></div></div><div class="wiz-opt-title">Marketing</div><div class="wiz-opt-sub">Growth, content, brand, SEO</div></div>
+          <div class="wiz-option" data-group="field" data-value="design" onclick="pickWizardOption(this)"><div class="wiz-thumb design"><div class="tbar"></div><div class="tline" style="width:68%"></div><div class="tline" style="width:84%"></div></div><div class="wiz-opt-title">Design</div><div class="wiz-opt-sub">Product, UX/UI, visual design</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="wiz-footer"><button class="wbtn back" id="wizBack" onclick="wizNav(-1)" style="visibility:hidden">← Back</button><button class="wbtn next" id="wizNext" onclick="wizNav(1)">Next →</button></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="app-shell">
+    <div class="step-nav">
+      <div class="sn-logo">Lets<span>Resume</span></div>
+      <div class="sn-step active" data-step="0" onclick="goToStep(0)"><div class="sn-num">1</div><div class="sn-label">Choose Template</div></div>
+      <div class="sn-step" data-step="1" onclick="goToStep(1)"><div class="sn-num">2</div><div class="sn-label">Header</div></div>
+      <div class="sn-step" data-step="2" onclick="goToStep(2)"><div class="sn-num">3</div><div class="sn-label">Experience</div></div>
+      <div class="sn-step" data-step="3" onclick="goToStep(3)"><div class="sn-num">4</div><div class="sn-label">Education</div></div>
+      <div class="sn-step" data-step="4" onclick="goToStep(4)"><div class="sn-num">5</div><div class="sn-label">Certifications</div></div>
+      <div class="sn-step" data-step="5" onclick="goToStep(5)"><div class="sn-num">6</div><div class="sn-label">Skills</div></div>
+      <div class="sn-step" data-step="6" onclick="goToStep(6)"><div class="sn-num">7</div><div class="sn-label">Summary</div></div>
+      <div class="sn-step" data-step="7" onclick="goToStep(7)"><div class="sn-num">8</div><div class="sn-label">Finalize</div></div>
+    </div>
+    <div class="editor-layout">
+      <div class="editor-form-panel">
+        <div class="efp-header"><div class="efp-title" id="efpTitle">Choose your template</div><div class="efp-sub" id="efpSub">Start with a style, then fill your details.</div></div>
+        <div class="save-hint" id="saveHint" style="padding:0 20px 10px">Not saved yet.</div>
+        <div class="efp-body">
+          <div class="efp-step active" id="stepTemplate"><div class="entry-card">Template is selected from your wizard preferences. Continue to fill details.</div></div>
+          <div class="efp-step" id="stepHeader">
+            <div class="form-row"><div class="fg"><label>First Name</label><input id="fname" value="Shivam" oninput="updatePreview()"></div><div class="fg"><label>Last Name</label><input id="lname" value="Agrawal" oninput="updatePreview()"></div></div>
+            <div class="form-row single"><div class="fg"><label>Job Title</label><input id="jobtitle" value="Full Stack Developer" oninput="updatePreview()"></div></div>
+            <div class="form-row"><div class="fg"><label>Phone</label><input id="phone" value="+91 97535 43210" oninput="updatePreview()"></div><div class="fg"><label>Email</label><input id="email" value="shivam@email.com" oninput="updatePreview()"></div></div>
+            <div class="form-row single"><div class="fg"><label>LinkedIn</label><input id="linkedin" value="linkedin.com/in/shivam" oninput="updatePreview()"></div></div>
+          </div>
+          <div class="efp-step" id="stepExperience">
+            <div class="entry-top"><div class="entry-title">Experience</div><button class="tiny-btn add" onclick="addExperience()">+ Add</button></div>
+            <div id="experienceList"></div>
+          </div>
+          <div class="efp-step" id="stepEducation">
+            <div class="entry-top"><div class="entry-title">Education</div><button class="tiny-btn add" onclick="addEducation()">+ Add</button></div>
+            <div id="educationList"></div>
+          </div>
+          <div class="efp-step" id="stepCertifications">
+            <div class="entry-top"><div class="entry-title">Certifications</div><button class="tiny-btn add" onclick="addCertification()">+ Add</button></div>
+            <div id="certificationList"></div>
+          </div>
+          <div class="efp-step" id="stepSkills">
+            <div class="form-row single"><div class="fg"><label>Skills (comma separated)</label><textarea id="skillsText" oninput="updatePreview()">React.js, Node.js, MongoDB, Express.js, REST API</textarea></div></div>
+          </div>
+          <div class="efp-step" id="stepSummary">
+            <div class="form-row single"><div class="fg"><label>Professional Summary</label><textarea id="summary" oninput="updatePreview()">Passionate full-stack developer with 2+ years experience building MERN stack applications for 10K+ users.</textarea></div></div>
+          </div>
+          <div class="efp-step" id="stepFinalize">
+            <div class="entry-card">Resume ready. Click save to store it in MongoDB and return to your dashboard.</div>
+            <div class="finalize-actions">
+              <button class="efp-nav-btn next" id="finalSaveBtn" onclick="saveResume()">Save Resume</button>
+              <a class="efp-nav-btn back" id="dashboardLink" href="/dashboard.html" style="display:none;text-decoration:none">Go to Dashboard</a>
+            </div>
+            <div class="success-card" id="saveSuccessCard" style="display:none">
+              <div class="success-title">Resume saved successfully</div>
+              <div class="success-sub">You can now continue from your dashboard.</div>
+            </div>
+            <div class="ats-box">
+              <div class="ats-title">ATS Score Builder (Rule-based, no AI required)</div>
+              <textarea id="atsJd" class="ats-textarea" placeholder="Optional: paste a job description for keyword matching..."></textarea>
+              <div class="ats-row">
+                <button class="efp-nav-btn next" id="atsAnalyzeBtn" onclick="runAtsAnalysis()">Analyze ATS Score</button>
+                <span id="atsStatus" class="save-hint">Run analysis to see score and suggestions.</span>
+              </div>
+              <div id="atsResult" style="display:none">
+                <div class="ats-row">
+                  <div class="ats-score" id="atsScoreValue">0 / 100</div>
+                  <span class="ats-chip" id="atsKeywordChip">Keyword match: --</span>
+                </div>
+                <div class="ats-grid">
+                  <div class="ats-item"><div class="ats-item-title">Keywords</div><div class="ats-item-value" id="atsKeywords">0</div></div>
+                  <div class="ats-item"><div class="ats-item-title">Completeness</div><div class="ats-item-value" id="atsCompleteness">0</div></div>
+                  <div class="ats-item"><div class="ats-item-title">Quantified Impact</div><div class="ats-item-value" id="atsImpact">0</div></div>
+                  <div class="ats-item"><div class="ats-item-title">Readability + Basics</div><div class="ats-item-value" id="atsReadability">0</div></div>
+                </div>
+                <div id="atsSuggestions"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="efp-footer"><button class="efp-nav-btn back" onclick="editorNav(-1)">← Back</button><div style="display:flex;gap:8px"><button class="efp-nav-btn next" onclick="editorNav(1)">Continue →</button></div></div>
+      </div>
+      <div class="preview-panel">
+        <div class="custom-toolbar">Accent:
+          <div class="ct-color active" style="background:#2563eb" data-c="#2563eb" onclick="changeAccent(this)"></div>
+          <div class="ct-color" style="background:#111118" data-c="#111118" onclick="changeAccent(this)"></div>
+          <div class="ct-color" style="background:#7c3aed" data-c="#7c3aed" onclick="changeAccent(this)"></div>
+        </div>
+        <div class="pp-scroll"><div class="resume-sheet" id="resumeSheet"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let wizStep = 0;
+let accentColor = "#2563eb";
+let editorStep = 0;
+let wizardChoices = { layout: "modern", photo: "no", field: "tech" };
+const FIELD_PROFILES = {
+  tech: {
+    jobTitle: "Full Stack Developer",
+    skills: "JavaScript, TypeScript, React, Node.js, REST APIs, MongoDB, Git, AWS, CI/CD, Agile",
+    summary: "Software engineer focused on building reliable web products and APIs. Experienced with modern JavaScript stacks, cloud-ready services, and measurable outcomes (performance, reliability, user scale).",
+    experiences: [{ title: "Software Engineer", company: "Acme Technologies", start: "Jan 2023", end: "Present", desc: "Shipped React and Node.js features for a product used by 10K+ users; cut API latency by 35% through caching and query tuning.\nOwned code reviews, unit tests, and production releases in a CI/CD pipeline." }],
+    educations: [{ degree: "B.Tech Computer Science & Engineering", institution: "Your University", year: "2027 (Expected)", grade: "8.4 / 10" }],
+    certifications: [{ name: "AWS Cloud Practitioner", issuer: "Amazon", year: "2025", details: "Cloud fundamentals and well-architected patterns." }],
+    atsPlaceholder: "Paste a software / engineering job description — we’ll match keywords like React, TypeScript, APIs, scalability…"
+  },
+  business: {
+    jobTitle: "Business Analyst",
+    skills: "Stakeholder management, requirements, SQL, Excel, KPIs, process mapping, Agile, documentation, forecasting, presentations",
+    summary: "Analytical professional translating business goals into clear requirements, metrics, and process improvements. Comfortable with data, workshops with stakeholders, and driving initiatives from discovery to delivery.",
+    experiences: [{ title: "Business Analyst", company: "Growth Partners Ltd.", start: "Jun 2022", end: "Present", desc: "Gathered requirements for finance and ops workflows; built dashboards and reports used by leadership.\nFacilitated sprint planning and backlog grooming; reduced cycle time for approvals by 20% through process redesign." }],
+    educations: [{ degree: "BBA — Business Administration", institution: "Your University", year: "2024", grade: "3.7 GPA" }],
+    certifications: [{ name: "Google Data Analytics Certificate", issuer: "Google", year: "2024", details: "Data cleaning, visualization, and stakeholder communication." }],
+    atsPlaceholder: "Paste a BA / strategy / ops role — we’ll match keywords like stakeholder, KPI, SQL, Agile, process improvement…"
+  },
+  marketing: {
+    jobTitle: "Digital Marketing Specialist",
+    skills: "SEO, SEM, Google Analytics, content strategy, social media, email marketing, A/B testing, copywriting, CRM, brand campaigns",
+    summary: "Marketing generalist focused on acquisition and engagement across channels. Experiments with messaging and creatives, reads funnel metrics, and collaborates with sales and product on growth goals.",
+    experiences: [{ title: "Marketing Associate", company: "Bright Media Co.", start: "Mar 2022", end: "Present", desc: "Managed paid search and social campaigns; improved CTR by 18% through audience and creative tests.\nOwned monthly reporting on ROAS, CAC, and channel mix; coordinated launches with design and sales." }],
+    educations: [{ degree: "B.A. — Marketing", institution: "Your University", year: "2023", grade: "3.8 GPA" }],
+    certifications: [{ name: "Google Ads Search Certification", issuer: "Google", year: "2024", details: "Campaign structure, bidding, and measurement." }],
+    atsPlaceholder: "Paste a marketing / growth job description — we’ll match SEO, campaigns, analytics, conversion…"
+  },
+  design: {
+    jobTitle: "Product Designer",
+    skills: "Figma, user research, prototyping, design systems, usability testing, accessibility (WCAG), UI patterns, workshop facilitation, handoff to engineering",
+    summary: "Designer focused on clear user flows and cohesive interfaces. Partners with PM and engineering from discovery through delivery; uses research and iteration to reduce risk and ship usable products.",
+    experiences: [{ title: "Product Designer", company: "Studio North", start: "Aug 2021", end: "Present", desc: "Led end-to-end design for web features; ran interviews and usability tests that informed roadmap priorities.\nMaintained component library in Figma; improved consistency and cut design QA issues by 25%." }],
+    educations: [{ degree: "B.Des — Interaction Design", institution: "Your University", year: "2022", grade: "First class" }],
+    certifications: [{ name: "NN/g UX Certification", issuer: "Nielsen Norman Group", year: "2023", details: "UX research and interaction principles." }],
+    atsPlaceholder: "Paste a UX / product design job description — we’ll match Figma, research, accessibility, design systems…"
+  }
+};
+function normalizeWizardLayout(v){
+  if (v === "classic" || v === "creative") return "modern";
+  if (v === "live-editor" || v === "live-editor-split" || v === "gla-resume") return v;
+  return v || "modern";
+}
+function applyFieldDefaultsForModern(){
+  const field = wizardChoices.field || "tech";
+  const p = FIELD_PROFILES[field] || FIELD_PROFILES.tech;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  set("jobtitle", p.jobTitle);
+  set("summary", p.summary);
+  set("skillsText", p.skills);
+  experiences = JSON.parse(JSON.stringify(p.experiences));
+  educations = JSON.parse(JSON.stringify(p.educations));
+  certifications = JSON.parse(JSON.stringify(p.certifications));
+  const ats = document.getElementById("atsJd");
+  if (ats && !ats.value.trim()) ats.placeholder = p.atsPlaceholder;
+  renderExperiences();
+  renderEducations();
+  renderCertifications();
+}
+let currentResumeId = null;
+let saveState = { saving: false, dirty: false, lastSavedAt: null };
+let suppressDirtyTracking = false;
+let experiences = [{ title: "Full Stack Developer", company: "Acme Technologies", start: "Jan 2023", end: "Present", desc: "Built 4 React dashboards used by 10K+ users. Reduced API response time by 35%." }];
+let educations = [{ degree: "B.Tech Computer Science & Engineering", institution: "GLA University", year: "2027 (Expected)", grade: "8.4 / 10" }];
+let certifications = [{ name: "AWS Cloud Practitioner", issuer: "Amazon", year: "2025", details: "Cloud fundamentals and architecture best practices." }];
+const stepIds = ["stepTemplate","stepHeader","stepExperience","stepEducation","stepCertifications","stepSkills","stepSummary","stepFinalize"];
+const stepMeta = [
+  ["Choose your template","Start with a style, then fill your details."],
+  ["Let's start with your header","Include contact details."],
+  ["Add your work experience","Highlight impact and metrics."],
+  ["Add your education","Include degree and institution."],
+  ["Add your certifications","Include certs relevant to your role."],
+  ["Add your skills","Use role-matching keywords."],
+  ["Write your summary","Keep it concise and specific."],
+  ["Finalize","Review and export your resume."]
+];
+const params = new URLSearchParams(window.location.search);
+const skipWizard = params.get("skipWizard") === "1" || params.get("mode") === "edit";
+const mode = params.get("mode") || "new";
+const requestedResumeId = params.get("resumeId");
+const TOKEN_KEY = "arb_token";
+const API_BASE = "";
+function g(id){const el=document.getElementById(id);return el?el.value:"";}
+function pickColor(el){document.querySelectorAll(".color-swatch").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");accentColor=el.dataset.color;document.documentElement.style.setProperty("--resume-accent",accentColor);}
+function pickWizardOption(el){
+  const group = el.dataset.group;
+  const value = el.dataset.value;
+  document.querySelectorAll(".wiz-option[data-group='"+group+"']").forEach((x)=>x.classList.remove("selected"));
+  el.classList.add("selected");
+  wizardChoices[group] = value;
+  updatePreview();
+}
+function wizNav(dir){wizStep=Math.max(0,Math.min(3,wizStep+dir));document.querySelectorAll(".wiz-step").forEach((s,i)=>s.classList.toggle("active",i===wizStep));document.getElementById("wizBack").style.visibility=wizStep===0?"hidden":"visible";const n=document.getElementById("wizNext");if(wizStep===3){n.textContent="Open editor →";n.onclick=launchApp;}}
+function launchApp(){
+  if (wizardChoices.layout === "live-editor" || wizardChoices.layout === "live-editor-split" || wizardChoices.layout === "gla-resume") {
+    let layoutVariant = "classic";
+    if (wizardChoices.layout === "live-editor-split") layoutVariant = "split-teal";
+    else if (wizardChoices.layout === "gla-resume") layoutVariant = "gla-ats";
+    try {
+      sessionStorage.setItem("letsresume_wizard_context", JSON.stringify({
+        field: wizardChoices.field || "tech",
+        accentColor,
+        photo: wizardChoices.photo || "no",
+        layoutVariant,
+      }));
+    } catch (e) {}
+    const next = new URL("/template-editor-live.html", window.location.origin);
+    if (mode) next.searchParams.set("mode", mode);
+    if (requestedResumeId) next.searchParams.set("resumeId", requestedResumeId);
+    if (skipWizard) next.searchParams.set("skipWizard", "1");
+    window.location.href = next.toString();
+    return;
+  }
+  if (!skipWizard) applyFieldDefaultsForModern();
+  document.getElementById("wizard").style.display="none";
+  document.getElementById("app").style.display="block";
+  if(skipWizard){editorStep=1;}
+  renderStep();
+  updatePreview();
+}
+function goToStep(idx){editorStep=idx;renderStep();updatePreview();}
+function editorNav(dir){editorStep=Math.max(0,Math.min(stepIds.length-1,editorStep+dir));renderStep();updatePreview();}
+function renderStep(){
+  stepIds.forEach((id,i)=>{const el=document.getElementById(id);if(el)el.classList.toggle("active",i===editorStep);});
+  document.querySelectorAll(".sn-step").forEach((s,i)=>{s.classList.toggle("active",i===editorStep);s.classList.toggle("done",i<editorStep);});
+  const meta = stepMeta[editorStep]; document.getElementById("efpTitle").textContent=meta[0]; document.getElementById("efpSub").textContent=meta[1];
+  const nextBtn = document.querySelector(".efp-footer .efp-nav-btn.next");
+  if (nextBtn) nextBtn.style.display = editorStep === stepIds.length - 1 ? "none" : "inline-block";
+}
+function renderExperiences(){
+  const root = document.getElementById("experienceList");
+  root.innerHTML = experiences.map((exp, idx) =>
+    "<div class='entry-card'><div class='entry-top'><div class='entry-title'>Experience "+(idx+1)+"</div><button class='tiny-btn remove' onclick='removeExperience("+idx+")'>Remove</button></div>"
+    +"<div class='form-row'><div class='fg'><label>Job Title</label><input value='"+escapeVal(exp.title)+"' oninput='updateExperience("+idx+",\"title\",this.value)'></div><div class='fg'><label>Company</label><input value='"+escapeVal(exp.company)+"' oninput='updateExperience("+idx+",\"company\",this.value)'></div></div>"
+    +"<div class='form-row'><div class='fg'><label>Start Date</label><input value='"+escapeVal(exp.start)+"' oninput='updateExperience("+idx+",\"start\",this.value)'></div><div class='fg'><label>End Date</label><input value='"+escapeVal(exp.end)+"' oninput='updateExperience("+idx+",\"end\",this.value)'></div></div>"
+    +"<div class='form-row single'><div class='fg'><label>Highlights</label><textarea oninput='updateExperience("+idx+",\"desc\",this.value)'>"+escapeVal(exp.desc)+"</textarea></div></div></div>"
+  ).join("");
+}
+function renderEducations(){
+  const root = document.getElementById("educationList");
+  root.innerHTML = educations.map((edu, idx) =>
+    "<div class='entry-card'><div class='entry-top'><div class='entry-title'>Education "+(idx+1)+"</div><button class='tiny-btn remove' onclick='removeEducation("+idx+")'>Remove</button></div>"
+    +"<div class='form-row single'><div class='fg'><label>Degree</label><input value='"+escapeVal(edu.degree)+"' oninput='updateEducation("+idx+",\"degree\",this.value)'></div></div>"
+    +"<div class='form-row'><div class='fg'><label>Institution</label><input value='"+escapeVal(edu.institution)+"' oninput='updateEducation("+idx+",\"institution\",this.value)'></div><div class='fg'><label>Year</label><input value='"+escapeVal(edu.year)+"' oninput='updateEducation("+idx+",\"year\",this.value)'></div></div>"
+    +"<div class='form-row single'><div class='fg'><label>Grade</label><input value='"+escapeVal(edu.grade)+"' oninput='updateEducation("+idx+",\"grade\",this.value)'></div></div></div>"
+  ).join("");
+}
+function renderCertifications(){
+  const root = document.getElementById("certificationList");
+  root.innerHTML = certifications.map((cert, idx) =>
+    "<div class='entry-card'><div class='entry-top'><div class='entry-title'>Certification "+(idx+1)+"</div><button class='tiny-btn remove' onclick='removeCertification("+idx+")'>Remove</button></div>"
+    +"<div class='form-row'><div class='fg'><label>Certification</label><input value='"+escapeVal(cert.name)+"' oninput='updateCertification("+idx+",\"name\",this.value)'></div><div class='fg'><label>Issuer</label><input value='"+escapeVal(cert.issuer)+"' oninput='updateCertification("+idx+",\"issuer\",this.value)'></div></div>"
+    +"<div class='form-row'><div class='fg'><label>Year</label><input value='"+escapeVal(cert.year)+"' oninput='updateCertification("+idx+",\"year\",this.value)'></div><div class='fg'><label>Details</label><input value='"+escapeVal(cert.details)+"' oninput='updateCertification("+idx+",\"details\",this.value)'></div></div></div>"
+  ).join("");
+}
+function addExperience(){experiences.push({ title: "", company: "", start: "", end: "", desc: "" });renderExperiences();updatePreview();}
+function removeExperience(idx){if(experiences.length===1)return;experiences=experiences.filter((_,i)=>i!==idx);renderExperiences();updatePreview();}
+function updateExperience(idx,key,val){experiences[idx][key]=val;updatePreview();}
+function addEducation(){educations.push({ degree: "", institution: "", year: "", grade: "" });renderEducations();updatePreview();}
+function removeEducation(idx){if(educations.length===1)return;educations=educations.filter((_,i)=>i!==idx);renderEducations();updatePreview();}
+function updateEducation(idx,key,val){educations[idx][key]=val;updatePreview();}
+function addCertification(){certifications.push({ name: "", issuer: "", year: "", details: "" });renderCertifications();updatePreview();}
+function removeCertification(idx){if(certifications.length===1)return;certifications=certifications.filter((_,i)=>i!==idx);renderCertifications();updatePreview();}
+function updateCertification(idx,key,val){certifications[idx][key]=val;updatePreview();}
+function escapeVal(v){return String(v || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#39;");}
+function changeAccent(el){document.querySelectorAll(".ct-color").forEach(c=>c.classList.remove("active"));el.classList.add("active");accentColor=el.dataset.c;document.documentElement.style.setProperty("--resume-accent",accentColor);updatePreview();}
+function markDirty(){if (suppressDirtyTracking) return; saveState.dirty = true;updateSaveHint();}
+function updateSaveHint(){
+  const el = document.getElementById("saveHint");
+  if (!el) return;
+  if (saveState.saving) { el.textContent = "Saving..."; return; }
+  if (saveState.lastSavedAt) {
+    const when = new Date(saveState.lastSavedAt).toLocaleTimeString();
+    el.textContent = saveState.dirty ? "Unsaved changes." : "Saved at " + when;
+    return;
+  }
+  el.textContent = "Not saved yet.";
+}
+function collectResumePayload(){
+  const payload = {
+    title: (g("jobtitle") || "My Resume").trim(),
+    content: {
+      templateId: wizardChoices.layout || "modern",
+      wizard: { ...wizardChoices, accentColor },
+      header: {
+        firstName: g("fname"),
+        lastName: g("lname"),
+        jobTitle: g("jobtitle"),
+        phone: g("phone"),
+        email: g("email"),
+        linkedin: g("linkedin"),
+      },
+      summary: g("summary"),
+      skillsText: g("skillsText"),
+      experiences,
+      educations,
+      certifications,
+    },
+  };
+  return payload;
+}
+async function apiRequest(path, options = {}){
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) {
+    window.location.href = "/auth";
+    throw new Error("Missing auth token");
+  }
+  const headers = { "Content-Type": "application/json", Authorization: "Bearer " + token, ...(options.headers || {}) };
+  const res = await fetch(API_BASE + path, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+async function saveResume(){
+  if (saveState.saving) return;
+  saveState.saving = true;
+  const finalSaveBtn = document.getElementById("finalSaveBtn");
+  if (finalSaveBtn) {
+    finalSaveBtn.disabled = true;
+    finalSaveBtn.textContent = "Saving...";
+  }
+  updateSaveHint();
+  try {
+    const payload = collectResumePayload();
+    if (currentResumeId) {
+      const data = await apiRequest("/api/resumes/" + encodeURIComponent(currentResumeId), { method: "PATCH", body: JSON.stringify(payload) });
+      currentResumeId = data.resume?._id || currentResumeId;
+    } else {
+      const data = await apiRequest("/api/resumes", { method: "POST", body: JSON.stringify(payload) });
+      currentResumeId = data.resume?._id || null;
+      if (currentResumeId) {
+        const next = new URL(window.location.href);
+        next.searchParams.set("mode", "edit");
+        next.searchParams.set("resumeId", currentResumeId);
+        next.searchParams.set("skipWizard", "1");
+        window.history.replaceState({}, "", next.toString());
+      }
+    }
+    saveState.dirty = false;
+    saveState.lastSavedAt = Date.now();
+    const card = document.getElementById("saveSuccessCard");
+    const dash = document.getElementById("dashboardLink");
+    if (card) card.style.display = "block";
+    if (dash) dash.style.display = "inline-block";
+    updateSaveHint();
+  } catch (err) {
+    alert(err.message || "Unable to save resume");
+  } finally {
+    saveState.saving = false;
+    if (finalSaveBtn) {
+      finalSaveBtn.disabled = false;
+      finalSaveBtn.textContent = "Save Resume";
+    }
+    updateSaveHint();
+  }
+}
+function setAtsStatus(text){const el=document.getElementById("atsStatus");if(el)el.textContent=text;}
+function renderAtsSuggestions(items){
+  const root = document.getElementById("atsSuggestions");
+  if (!root) return;
+  if (!Array.isArray(items) || items.length === 0) {
+    root.innerHTML = "<div class='ats-suggestion'><p>No major fixes needed. Resume already looks ATS-friendly.</p></div>";
+    return;
+  }
+  root.innerHTML = items.map((item, idx) =>
+    "<div class='ats-suggestion'>"
+    + "<p><strong>Fix "+(idx+1)+":</strong> "+escapeVal(item.message || "")+"</p>"
+    + "<div class='ats-example'>"+escapeVal(item.example || "")+"</div>"
+    + ((item.targetField === "summary" || item.targetField === "experience")
+      ? "<div class='ats-row'><button class='tiny-btn add' onclick='applyAtsSuggestion("+idx+")'>Use this text</button></div>"
+      : "")
+    + "</div>"
+  ).join("");
+}
+let latestAtsSuggestions = [];
+function applyAtsSuggestion(index){
+  const item = latestAtsSuggestions[index];
+  if (!item?.example) return;
+  if (item.targetField === "summary") {
+    const el = document.getElementById("summary");
+    if (el) {
+      el.value = item.example;
+      updatePreview();
+    }
+    return;
+  }
+  if (item.targetField === "experience") {
+    if (!Array.isArray(experiences) || experiences.length === 0) {
+      experiences = [{ title: "", company: "", start: "", end: "", desc: item.example }];
+    } else {
+      experiences[0].desc = item.example;
+    }
+    renderExperiences();
+    updatePreview();
+  }
+}
+async function runAtsAnalysis(){
+  const btn = document.getElementById("atsAnalyzeBtn");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Analyzing...";
+  }
+  setAtsStatus("Running ATS analysis...");
+  try {
+    const payload = collectResumePayload();
+    const jobDescription = g("atsJd");
+    const result = await apiRequest("/api/ai/ats-score", {
+      method: "POST",
+      body: JSON.stringify({ content: payload.content, jobDescription }),
+    });
+    document.getElementById("atsResult").style.display = "block";
+    document.getElementById("atsScoreValue").textContent = String(result.score || 0) + " / 100";
+    document.getElementById("atsKeywordChip").textContent = "Keyword match: " + (result.keywordMatchPct ?? "--") + "%";
+    document.getElementById("atsKeywords").textContent = String(result.breakdown?.keywords ?? 0);
+    document.getElementById("atsCompleteness").textContent = String(result.breakdown?.completeness ?? 0);
+    document.getElementById("atsImpact").textContent = String(result.breakdown?.quantifiedImpact ?? 0);
+    const readPlusBasics = Number(result.breakdown?.readability || 0) + Number(result.breakdown?.basics || 0);
+    document.getElementById("atsReadability").textContent = String(readPlusBasics);
+    latestAtsSuggestions = Array.isArray(result.suggestions) ? result.suggestions : [];
+    renderAtsSuggestions(latestAtsSuggestions);
+    setAtsStatus("Analysis complete.");
+  } catch (err) {
+    setAtsStatus(err.message || "ATS analysis failed.");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Analyze ATS Score";
+    }
+  }
+}
+function selectWizardOption(group, value){
+  let v = value;
+  if (group === "layout") v = normalizeWizardLayout(value);
+  const el = document.querySelector(".wiz-option[data-group='"+group+"'][data-value='"+v+"']");
+  if (!el) return;
+  document.querySelectorAll(".wiz-option[data-group='"+group+"']").forEach((x)=>x.classList.remove("selected"));
+  el.classList.add("selected");
+}
+function applyLoadedData(resume){
+  const content = resume?.content || {};
+  currentResumeId = resume?._id || currentResumeId;
+  suppressDirtyTracking = true;
+  wizardChoices = {
+    layout: normalizeWizardLayout(content?.wizard?.layout || content?.templateId || "modern"),
+    photo: content?.wizard?.photo || "no",
+    field: content?.wizard?.field || "tech",
+  };
+  accentColor = content?.wizard?.accentColor || "#2563eb";
+  document.documentElement.style.setProperty("--resume-accent", accentColor);
+  selectWizardOption("layout", wizardChoices.layout);
+  selectWizardOption("photo", wizardChoices.photo);
+  selectWizardOption("field", wizardChoices.field);
+  const h = content.header || {};
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.value = value || ""; };
+  set("fname", h.firstName || "");
+  set("lname", h.lastName || "");
+  set("jobtitle", h.jobTitle || resume?.title || "");
+  set("phone", h.phone || "");
+  set("email", h.email || "");
+  set("linkedin", h.linkedin || "");
+  set("summary", content.summary || "");
+  set("skillsText", content.skillsText || "");
+  experiences = Array.isArray(content.experiences) && content.experiences.length ? content.experiences : experiences;
+  educations = Array.isArray(content.educations) && content.educations.length ? content.educations : educations;
+  certifications = Array.isArray(content.certifications) && content.certifications.length ? content.certifications : certifications;
+  renderExperiences();
+  renderEducations();
+  renderCertifications();
+  suppressDirtyTracking = false;
+}
+async function loadResumeIfNeeded(){
+  if (mode !== "edit" || !requestedResumeId) return;
+  const data = await apiRequest("/api/resumes/" + encodeURIComponent(requestedResumeId));
+  const tid = data?.resume?.content?.templateId;
+  if (tid === "live-editor" || tid === "live-editor-split" || tid === "gla-resume") {
+    const liveUrl = new URL("/template-editor-live.html", window.location.origin);
+    liveUrl.searchParams.set("mode", "edit");
+    liveUrl.searchParams.set("resumeId", requestedResumeId);
+    liveUrl.searchParams.set("skipWizard", "1");
+    window.location.href = liveUrl.toString();
+    return;
+  }
+  applyLoadedData(data.resume);
+  saveState.dirty = false;
+  saveState.lastSavedAt = Date.now();
+  updateSaveHint();
+}
+function updatePreview(){
+  const name=(g("fname")+" "+g("lname")).trim()||"Your Name";
+  const initials = name.split(" ").filter(Boolean).slice(0,2).map((p)=>p[0]).join("").toUpperCase() || "YN";
+  const title=g("jobtitle")||"Job Title";
+  const phone=g("phone"), email=g("email"), linkedin=g("linkedin");
+  const summary=g("summary")||"Summary";
+  const expHtml=experiences.map(exp=>"<div><div class='rm-entry-title'>"+escapeVal(exp.title||"Role")+"</div><div class='rm-entry-sub'>"+escapeVal(exp.company||"Company")+" · "+escapeVal(exp.start||"Start")+" - "+escapeVal(exp.end||"End")+"</div><div class='rm-entry-desc'>"+escapeVal(exp.desc||"")+"</div></div>").join("");
+  const eduHtml=educations.map(edu=>"<div><div class='rm-entry-title'>"+escapeVal(edu.degree||"Degree")+"</div><div class='rm-entry-sub'>"+escapeVal(edu.institution||"Institution")+" · "+escapeVal(edu.year||"Year")+" · "+escapeVal(edu.grade||"")+"</div></div>").join("");
+  const certHtml=certifications.map(cert=>"<div><div class='rm-entry-title'>"+escapeVal(cert.name||"Certification")+"</div><div class='rm-entry-sub'>"+escapeVal(cert.issuer||"Issuer")+" · "+escapeVal(cert.year||"Year")+"</div><div class='rm-entry-desc'>"+escapeVal(cert.details||"")+"</div></div>").join("");
+  const skills=(g("skillsText")||"").split(",").map(s=>s.trim()).filter(Boolean);
+  const skillPills=skills.map(s=>"<span class='rm-skill'>"+s+"</span>").join("");
+  const photoHtml = wizardChoices.photo === "yes" ? "<div class='rm-photo'>"+initials+"</div>" : "";
+  const wl = wizardChoices.layout;
+  const layoutClass =
+    wl === "live-editor" || wl === "live-editor-split" || wl === "gla-resume"
+      ? "layout-classic"
+      : "layout-" + normalizeWizardLayout(wl);
+  document.getElementById("resumeSheet").innerHTML =
+    "<div class='resume-modern "+layoutClass+"'><div class='rm-head'><div class='rm-head-row'><div><div class='rm-name'>"+name+"</div><div class='rm-role'>"+title+"</div><div class='rm-contact'><span>"+phone+"</span><span>"+email+"</span><span>"+linkedin+"</span></div></div>"+photoHtml+"</div></div><div class='rm-body'>"
+    +"<div><div class='rm-section-title'>Professional Summary</div><div class='rm-text'>"+summary+"</div></div>"
+    +"<div><div class='rm-section-title'>Experience</div>"+expHtml+"</div>"
+    +"<div><div class='rm-section-title'>Education</div>"+eduHtml+"</div>"
+    +"<div><div class='rm-section-title'>Certifications</div>"+certHtml+"</div>"
+    +"<div><div class='rm-section-title'>Skills</div><div class='rm-skills'>"+skillPills+"</div></div></div></div>";
+  if (!suppressDirtyTracking) markDirty();
+}
+renderExperiences();
+renderEducations();
+renderCertifications();
+async function init(){
+  try {
+    await loadResumeIfNeeded();
+  } catch (err) {
+    alert(err.message || "Unable to load resume");
+  }
+  if (skipWizard) {
+    launchApp();
+  } else {
+    document.getElementById("wizard").style.display="flex";
+    document.getElementById("app").style.display="none";
+    updatePreview();
+  }
+}
+init();
+</script>
+</body>
+</html>

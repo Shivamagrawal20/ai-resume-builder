@@ -1,51 +1,180 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { api, getToken, setToken } from "./api.js";
 
-export default function App() {
-  const [token, setTokenState] = useState(() => getToken());
+function LandingPage({ user }) {
+  const [activeBuilderTab, setActiveBuilderTab] = useState("Personal");
+  const marqueeItems = [
+    "MERN Stack",
+    "AI Resume Builder",
+    "Claude API",
+    "MongoDB Atlas",
+    "React.js",
+    "Node.js",
+    "ATS Optimization",
+    "JWT Auth",
+    "Express.js",
+    "Mongoose ODM",
+    "PDF Export",
+    "NLP",
+  ];
+
+  useEffect(() => {
+    const cursor = document.querySelector(".cursor");
+    const ring = document.querySelector(".cursor-ring");
+    const moveCursor = (e) => {
+      if (cursor) {
+        cursor.style.left = `${e.clientX - 6}px`;
+        cursor.style.top = `${e.clientY - 6}px`;
+      }
+      if (ring) {
+        ring.style.left = `${e.clientX}px`;
+        ring.style.top = `${e.clientY}px`;
+      }
+    };
+    window.addEventListener("mousemove", moveCursor);
+
+    const reveals = Array.from(document.querySelectorAll(".reveal"));
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add("visible");
+        });
+      },
+      { threshold: 0.15 }
+    );
+    reveals.forEach((el) => revealObserver.observe(el));
+
+    const statEls = Array.from(document.querySelectorAll("[data-count]"));
+    const counterObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          const target = Number(el.getAttribute("data-count") || 0);
+          let start = 0;
+          const step = target / 60;
+          const interval = setInterval(() => {
+            start += step;
+            if (start >= target) {
+              start = target;
+              clearInterval(interval);
+            }
+            if (target >= 1000) el.textContent = `${Math.floor(start / 1000)}K+`;
+            else if (target <= 10) el.textContent = `${Math.floor(start)}x`;
+            else el.textContent = `${Math.floor(start)}`;
+          }, 16);
+          counterObserver.unobserve(el);
+        });
+      },
+      { threshold: 0.3 }
+    );
+    statEls.forEach((el) => counterObserver.observe(el));
+
+    return () => {
+      window.removeEventListener("mousemove", moveCursor);
+      revealObserver.disconnect();
+      counterObserver.disconnect();
+    };
+  }, []);
+
+  return (
+    <div className="landing-page">
+      <div className="cursor" />
+      <div className="cursor-ring" />
+      <header className="home-nav">
+        <div className="nav-logo">
+          Lets<span>Resume</span>
+        </div>
+        <ul className="nav-links">
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#builder">Builder</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+        <Link className="nav-cta" to={user ? "/app" : "/auth"}>Start for free →</Link>
+      </header>
+      <section id="hero">
+        <div className="hero-bg">
+          <div className="hero-grid" />
+          <div className="hero-blob b1" />
+          <div className="hero-blob b2" />
+          <div className="hero-blob b3" />
+        </div>
+        <div className="hero-content">
+          <div className="hero-badge">AI-Powered · ATS-Optimized · MERN Stack</div>
+          <h1 className="hero-h1">Your resume,<br /><em>reimagined</em> by<br /><span className="strike">guesswork</span> AI</h1>
+          <p className="hero-sub">LetsResume uses cutting-edge AI to transform your raw experience into polished, ATS-beating resumes.</p>
+          <div className="hero-actions">
+            <Link className="btn-primary" to={user ? "/app" : "/auth"}>Build my resume <span>→</span></Link>
+            <a className="btn-secondary" href="#how">See how it works</a>
+          </div>
+        </div>
+      </section>
+      <div className="marquee-section"><div className="marquee-track">{[...marqueeItems, ...marqueeItems].map((item, idx) => <span className="marquee-item" key={`${item}-${idx}`}>{item}<span className="marquee-dot" /></span>)}</div></div>
+      <section id="how">
+        <div className="reveal"><span className="section-label">Process</span></div>
+        <div className="reveal reveal-delay-1"><h2 className="section-title">Four steps to<br />your dream job</h2></div>
+        <div className="reveal reveal-delay-2"><p className="section-sub">From raw inputs to job-ready resume in under 5 minutes.</p></div>
+        <div className="steps-grid reveal reveal-delay-3">
+          <div className="step-card"><div className="step-num">01</div><div className="step-title">Create your account</div><div className="step-desc">Sign up securely with JWT authentication.</div></div>
+          <div className="step-card"><div className="step-num">02</div><div className="step-title">Fill your details</div><div className="step-desc">Enter your experience, education, and skills quickly.</div></div>
+          <div className="step-card"><div className="step-num">03</div><div className="step-title">Let AI enhance it</div><div className="step-desc">AI rewrites each section professionally.</div></div>
+          <div className="step-card"><div className="step-num">04</div><div className="step-title">Export & apply</div><div className="step-desc">Download and use role-specific resume versions.</div></div>
+        </div>
+      </section>
+      <section id="features">
+        <div className="features-layout">
+          <div>
+            <div className="reveal"><span className="section-label">Features</span></div>
+            <div className="reveal reveal-delay-1"><h2 className="section-title">Everything you need to stand out</h2></div>
+            <div className="reveal reveal-delay-2"><p className="section-sub">Backed by MERN and AI integrations for job seekers.</p></div>
+            <div className="features-list" style={{ marginTop: "40px" }}>
+              {["AI Content Generation", "ATS Score Analyzer", "Persistent Storage", "Multiple Templates", "PDF Export"].map((feature) => (
+                <div className="feature-item reveal reveal-delay-3" key={feature}>
+                  <div className="feature-icon">✨</div>
+                  <div className="feature-text"><h3>{feature}</h3><p>Professional experience designed for modern hiring workflows.</p></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="features-visual reveal reveal-delay-2"><div className="visual-ui"><div className="visual-header"><div className="vdot r" /><div className="vdot y" /><div className="vdot g" /><span className="visual-title">AI Resume Assistant</span></div><div className="ai-typing"><div className="ai-label">✦ AI is writing your summary</div><div className="ai-text">Results-driven full-stack developer with 2+ years building scalable MERN applications.<span className="ai-cursor" /></div></div></div></div>
+        </div>
+      </section>
+      <section id="builder">
+        <div className="reveal"><span className="section-label">Live Builder</span></div>
+        <div className="reveal reveal-delay-1"><h2 className="section-title">Build in real time</h2></div>
+        <div className="reveal reveal-delay-2"><p className="section-sub">Type your details, hit AI, and improve each section instantly.</p></div>
+        <div className="builder-mockup reveal reveal-delay-3">
+          <div className="builder-topbar">
+            <div className="builder-tabs">
+              {["Personal", "Experience", "Education", "Skills", "Projects"].map((tab) => (
+                <button type="button" key={tab} className={`btab ${activeBuilderTab === tab ? "active" : ""}`} onClick={() => setActiveBuilderTab(tab)}>{tab}</button>
+              ))}
+            </div>
+            <div className="builder-actions"><button className="bact ai">✦ AI Enhance</button><button className="bact export">↓ Export PDF</button></div>
+          </div>
+          <div className="builder-body"><div className="builder-form"><div className="form-section-title">Personal Information</div><div className="form-group"><label className="form-label">Full Name</label><input className="form-field" value="Shivam Agrawal" readOnly /></div><div className="form-group"><label className="form-label">Job Title</label><input className="form-field" value="Full Stack Developer" readOnly /></div><button className="ai-suggest-btn">✦ Rewrite with AI → professional & ATS-optimized</button></div><div className="builder-preview"><div className="preview-paper"><div className="preview-name">Shivam Agrawal</div><div className="preview-role">Full Stack Developer — React · Node.js · MongoDB</div></div></div></div>
+        </div>
+      </section>
+      <section id="stats" style={{ padding: 0 }}><div className="stats-grid"><div className="stat-item reveal"><div className="stat-num" data-count="50000">0</div><div className="stat-label">Resumes Built</div></div><div className="stat-item reveal reveal-delay-1"><div className="stat-num" data-count="87">0</div><div className="stat-label">Avg ATS Score</div></div><div className="stat-item reveal reveal-delay-2"><div className="stat-num" data-count="3">0</div><div className="stat-label">x More Interviews</div></div><div className="stat-item reveal reveal-delay-3"><div className="stat-num" data-count="5">0</div><div className="stat-label">Minute Setup Time</div></div></div></section>
+      <section id="testimonials"><div style={{ textAlign: "center" }}><div className="reveal"><span className="section-label">Reviews</span></div><div className="reveal reveal-delay-1"><h2 className="section-title">What job seekers say</h2></div></div><div className="testi-grid"><div className="testi-card reveal reveal-delay-1"><div className="testi-stars">★★★★★</div><div className="testi-text">I got more interviews after optimizing with AI suggestions.</div></div><div className="testi-card reveal reveal-delay-2"><div className="testi-stars">★★★★★</div><div className="testi-text">Best resume workflow I have used this year.</div></div><div className="testi-card reveal reveal-delay-3"><div className="testi-stars">★★★★★</div><div className="testi-text">Fast, polished, and great for role-specific versions.</div></div></div></section>
+      <section id="pricing"><div style={{ textAlign: "center" }}><div className="reveal"><span className="section-label">Pricing</span></div><div className="reveal reveal-delay-1"><h2 className="section-title">Simple, honest pricing</h2></div></div><div className="pricing-grid"><div className="price-card reveal reveal-delay-1"><div className="price-plan">Free</div><div className="price-amount">₹0</div><div className="price-period">Forever free</div><ul className="price-features"><li>1 resume</li><li>3 AI generations / month</li></ul></div><div className="price-card featured reveal reveal-delay-2"><div className="price-badge">Most Popular</div><div className="price-plan">Pro</div><div className="price-amount">₹299</div><div className="price-period">per month</div><ul className="price-features"><li>Unlimited resumes</li><li>Unlimited AI generations</li></ul></div><div className="price-card reveal reveal-delay-3"><div className="price-plan">Team</div><div className="price-amount">₹799</div><div className="price-period">per month</div><ul className="price-features"><li>Everything in Pro</li><li>Shared template library</li></ul></div></div></section>
+      <section id="cta"><div className="cta-bg-text">LetsResume</div><div className="cta-content reveal"><h2 className="cta-title">Ready to land your<br /><em>dream job?</em></h2><p className="cta-sub">Join 50,000+ job seekers who write better resumes with AI.</p><div className="cta-form"><input className="cta-input" type="email" placeholder="Enter your email address" /><Link className="btn-cta" to={user ? "/app" : "/auth"}>Start free →</Link></div><p className="cta-note">No credit card required · Free plan available · Setup in 60 seconds</p></div></section>
+      <footer><div className="footer-grid"><div><div className="footer-brand">Lets<span style={{ color: "var(--accent)" }}>Resume</span></div><p className="footer-desc">AI-powered resume builder built on the MERN stack.</p></div><div><div className="footer-col-title">Product</div><ul className="footer-links"><li><a href="#how">How it works</a></li><li><a href="#features">Features</a></li><li><a href="#builder">Builder</a></li></ul></div><div><div className="footer-col-title">Resources</div><ul className="footer-links"><li><a href="#pricing">Pricing</a></li><li><a href="/auth">Support</a></li></ul></div><div><div className="footer-col-title">Company</div><ul className="footer-links"><li><a href="/auth">About</a></li><li><a href="/auth">Contact</a></li></ul></div></div><div className="footer-bottom"><span>© 2025 LetsResume</span><span>Built with <span className="footer-accent">♥</span></span></div></footer>
+    </div>
+  );
+}
+
+function AuthPage({ onAuthSuccess, user }) {
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [authError, setAuthError] = useState("");
-  const [user, setUser] = useState(null);
-
-  const [resumes, setResumes] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
-  const [title, setTitle] = useState("");
-  const [contentJson, setContentJson] = useState("{}");
-  const [section, setSection] = useState("Experience");
-  const [aiContext, setAiContext] = useState("");
-  const [suggestion, setSuggestion] = useState("");
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState("");
 
-  const loadMe = useCallback(async () => {
-    const data = await api.me();
-    setUser(data.user);
-  }, []);
-
-  const loadResumes = useCallback(async () => {
-    const data = await api.listResumes();
-    setResumes(data.resumes || []);
-  }, []);
-
-  useEffect(() => {
-    if (!token) {
-      setUser(null);
-      return;
-    }
-    (async () => {
-      try {
-        await loadMe();
-        await loadResumes();
-      } catch {
-        setToken("");
-        setTokenState(null);
-        setUser(null);
-      }
-    })();
-  }, [token, loadMe, loadResumes]);
+  if (user) return <Navigate to="/app" replace />;
 
   async function handleAuth(e) {
     e.preventDefault();
@@ -53,15 +182,9 @@ export default function App() {
     setBusy(true);
     try {
       const fn = tab === "register" ? api.register : api.login;
-      const body =
-        tab === "register"
-          ? { email, password, name: name || undefined }
-          : { email, password };
+      const body = tab === "register" ? { email, password, name: name || undefined } : { email, password };
       const data = await fn(body);
-      setToken(data.token);
-      setTokenState(data.token);
-      setUser(data.user);
-      await loadResumes();
+      onAuthSuccess(data);
     } catch (err) {
       setAuthError(err.message);
     } finally {
@@ -69,241 +192,120 @@ export default function App() {
     }
   }
 
-  function logout() {
+  return (
+    <main className="auth-page">
+      <Link to="/" className="back-home">
+        ← Back to LetsResume
+      </Link>
+      <div className="auth-card">
+        <h1>Welcome to LetsResume</h1>
+        <p>Sign in to create and manage AI-assisted resumes.</p>
+        <div className="tabs">
+          <button type="button" className={tab === "login" ? "active" : ""} onClick={() => setTab("login")}>
+            Log in
+          </button>
+          <button type="button" className={tab === "register" ? "active" : ""} onClick={() => setTab("register")}>
+            Register
+          </button>
+        </div>
+
+        <form onSubmit={handleAuth}>
+          {tab === "register" && (
+            <div className="field">
+              <label>Name (optional)</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+            </div>
+          )}
+          <div className="field">
+            <label>Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+          </div>
+          <div className="field">
+            <label>Password (min 8)</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              autoComplete={tab === "register" ? "new-password" : "current-password"}
+            />
+          </div>
+          <button type="submit" className="button primary wide" disabled={busy}>
+            {busy ? "Please wait..." : tab === "register" ? "Create account" : "Log in"}
+          </button>
+          {authError && <p className="error">{authError}</p>}
+        </form>
+      </div>
+    </main>
+  );
+}
+
+function BuilderPage({ user, onLogout }) {
+  const navigate = useNavigate();
+  if (!user) return <Navigate to="/auth" replace />;
+  useEffect(() => {
+    window.location.href = "/dashboard.html";
+  }, []);
+  return (
+    <main className="builder-page">
+      <p className="muted">Opening dashboard...</p>
+      <button className="button ghost" onClick={() => { onLogout(); navigate("/auth"); }}>Log out</button>
+    </main>
+  );
+}
+
+export default function App() {
+  const [token, setTokenState] = useState(() => getToken());
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  const loadMe = useCallback(async () => {
+    const data = await api.me();
+    setUser(data.user);
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      setUser(null);
+      setAuthReady(true);
+      return;
+    }
+    (async () => {
+      try {
+        await loadMe();
+      } catch {
+        setToken("");
+        setTokenState(null);
+        setUser(null);
+      } finally {
+        setAuthReady(true);
+      }
+    })();
+  }, [token, loadMe]);
+
+  function handleAuthSuccess(data) {
+    setToken(data.token);
+    setTokenState(data.token);
+    setUser(data.user);
+  }
+
+  function handleLogout() {
     setToken("");
     setTokenState(null);
     setUser(null);
-    setResumes([]);
-    setSelectedId(null);
-    setSuggestion("");
   }
 
-  async function openResume(id) {
-    setMsg("");
-    setSuggestion("");
-    const { resume } = await api.getResume(id);
-    setSelectedId(id);
-    setTitle(resume.title);
-    setContentJson(JSON.stringify(resume.content ?? {}, null, 2));
-    setAiContext(JSON.stringify(resume.content ?? {}, null, 2));
-  }
-
-  async function saveResume() {
-    setMsg("");
-    let content;
-    try {
-      content = JSON.parse(contentJson || "{}");
-    } catch {
-      setMsg("Content must be valid JSON.");
-      return;
-    }
-    setBusy(true);
-    try {
-      if (!selectedId) {
-        const { resume } = await api.createResume({ title, content });
-        setSelectedId(resume._id);
-        await loadResumes();
-        setMsg("Created.");
-      } else {
-        await api.updateResume(selectedId, { title, content });
-        await loadResumes();
-        setMsg("Saved.");
-      }
-    } catch (err) {
-      setMsg(err.message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function newResume() {
-    setSelectedId(null);
-    setTitle("My resume");
-    setContentJson("{}");
-    setAiContext("{}");
-    setSuggestion("");
-    setMsg("");
-  }
-
-  async function removeResume() {
-    if (!selectedId || !confirm("Delete this resume?")) return;
-    setBusy(true);
-    try {
-      await api.deleteResume(selectedId);
-      await loadResumes();
-      newResume();
-    } catch (err) {
-      setMsg(err.message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function runAi() {
-    setMsg("");
-    setSuggestion("");
-    let context = aiContext;
-    try {
-      const parsed = JSON.parse(aiContext);
-      context = parsed;
-    } catch {
-      /* use as string */
-    }
-    setBusy(true);
-    try {
-      const data = await api.aiSuggest({ section, context });
-      setSuggestion(data.suggestion || "");
-    } catch (err) {
-      setMsg(err.message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (token && !user) {
-    return (
-      <div className="app">
-        <p className="sub">Loading…</p>
-      </div>
-    );
-  }
-
-  if (!token || !user) {
-    return (
-      <div className="app">
-        <h1>AI Resume Builder</h1>
-        <p className="sub">Sign in to create and edit resumes. Backend runs on port 4000.</p>
-        <div className="panel">
-          <div className="tabs">
-            <button type="button" className={tab === "login" ? "active" : ""} onClick={() => setTab("login")}>
-              Log in
-            </button>
-            <button
-              type="button"
-              className={tab === "register" ? "active" : ""}
-              onClick={() => setTab("register")}
-            >
-              Register
-            </button>
-          </div>
-          <form onSubmit={handleAuth}>
-            {tab === "register" && (
-              <div style={{ marginBottom: "0.75rem" }}>
-                <label>Name (optional)</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
-              </div>
-            )}
-            <div style={{ marginBottom: "0.75rem" }}>
-              <label>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div style={{ marginBottom: "0.75rem" }}>
-              <label>Password (min 8 characters)</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete={tab === "register" ? "new-password" : "current-password"}
-              />
-            </div>
-            <button type="submit" disabled={busy}>
-              {busy ? "…" : tab === "register" ? "Create account" : "Log in"}
-            </button>
-            {authError && <p className="error">{authError}</p>}
-          </form>
-        </div>
-      </div>
-    );
+  if (!authReady) {
+    return <div className="loading">Loading...</div>;
   }
 
   return (
-    <div className="app">
-      <div className="row" style={{ marginBottom: "1rem" }}>
-        <div>
-          <h1>AI Resume Builder</h1>
-          <p className="sub" style={{ margin: 0 }}>
-            {user.email}
-          </p>
-        </div>
-        <button type="button" className="secondary" onClick={logout}>
-          Log out
-        </button>
-      </div>
-
-      <div className="grid-2">
-        <div className="panel">
-          <div className="row" style={{ marginBottom: "0.75rem" }}>
-            <strong>Your resumes</strong>
-            <button type="button" className="secondary" onClick={newResume}>
-              New
-            </button>
-          </div>
-          <ul className="list">
-            {resumes.length === 0 && <li style={{ color: "var(--muted)" }}>No resumes yet.</li>}
-            {resumes.map((r) => (
-              <li key={r._id}>
-                <button type="button" className="link" onClick={() => openResume(r._id)}>
-                  {r.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="panel">
-          <label>Title</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ marginBottom: "0.75rem" }} />
-          <label>Content (JSON)</label>
-          <textarea value={contentJson} onChange={(e) => setContentJson(e.target.value)} />
-          <div className="row" style={{ marginTop: "0.75rem" }}>
-            <button type="button" onClick={saveResume} disabled={busy}>
-              {selectedId ? "Save" : "Create"}
-            </button>
-            {selectedId && (
-              <button type="button" className="danger" onClick={removeResume} disabled={busy}>
-                Delete
-              </button>
-            )}
-          </div>
-          {msg && <p className="hint">{msg}</p>}
-        </div>
-      </div>
-
-      <div className="panel">
-        <strong>AI suggest</strong>
-        <p className="hint">Requires OPENAI_API_KEY on the server. Uses your context below.</p>
-        <div className="grid-2" style={{ marginTop: "0.75rem" }}>
-          <div>
-            <label>Section name</label>
-            <input value={section} onChange={(e) => setSection(e.target.value)} />
-          </div>
-          <div>
-            <label>Context (JSON or text)</label>
-            <textarea
-              value={aiContext}
-              onChange={(e) => setAiContext(e.target.value)}
-              style={{ minHeight: "100px" }}
-            />
-          </div>
-        </div>
-        <button type="button" style={{ marginTop: "0.75rem" }} onClick={runAi} disabled={busy}>
-          Get suggestion
-        </button>
-        {suggestion && (
-          <div className="suggestion">
-            <strong>Suggestion</strong>
-            {suggestion}
-          </div>
-        )}
-      </div>
-    </div>
+    <Routes>
+      <Route path="/" element={<LandingPage user={user} />} />
+      <Route path="/auth" element={<AuthPage onAuthSuccess={handleAuthSuccess} user={user} />} />
+      <Route path="/app" element={<BuilderPage user={user} onLogout={handleLogout} />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

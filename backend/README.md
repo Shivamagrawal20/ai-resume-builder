@@ -1,6 +1,6 @@
 # Backend — AI Resume Builder API
 
-Node.js **Express** API with **MongoDB** (Mongoose) and optional **OpenAI**. The code uses a **layered layout** (routes → controllers → services → models) so you can explain each responsibility clearly. A few folders hold **placeholder files only** (comments, no logic yet) to show where growth would go.
+Node.js **Express** API with **MongoDB** (Mongoose) and optional **Google Gemini** (`@google/generative-ai`). The code uses a **layered layout** (routes → controllers → services → models) so you can explain each responsibility clearly. A few folders hold **placeholder files only** (comments, no logic yet) to show where growth would go.
 
 ## Folder structure
 
@@ -20,7 +20,7 @@ backend/src/
 │   ├── resume.routes.js
 │   └── ai.routes.js
 ├── controllers/              # HTTP in/out (thin)
-├── services/                 # Business logic + OpenAI
+├── services/                 # Business logic + Gemini (ai.service.js)
 ├── middleware/
 │   ├── auth.middleware.js
 │   ├── error.middleware.js
@@ -40,7 +40,7 @@ backend/src/
 2. **`app.js`** applies **Helmet**, **CORS**, JSON parsing, **`/health`**, then **`/api`** from **`routes/index.js`**.
 3. **Routes** attach **express-validator** rules and **`validate`**, then call **controllers**.
 4. **Controllers** call **services** and send JSON responses.
-5. **Services** use **models** (and **OpenAI** in `ai.service.js`).
+5. **Services** use **models** (and **Gemini** in `ai.service.js`).
 6. **Protected routes** use **`requireAuth`** (JWT in `Authorization: Bearer`).
 
 ## Implemented vs placeholder
@@ -60,7 +60,8 @@ Copy `.env.example` to `.env`:
 | `JWT_SECRET` | Yes | Secret for signing JWTs |
 | `PORT` | No | Default `4000` |
 | `JWT_EXPIRES_IN` | No | Default `7d` |
-| `OPENAI_API_KEY` | No | Needed for `POST /api/ai/suggest` |
+| `GEMINI_API_KEY` | No | Needed for `POST /api/ai/suggest` |
+| `GEMINI_MODEL` | No | Default `gemini-2.5-flash` (`gemini-1.5-*` returns 404 — retired) |
 
 ## Scripts
 
@@ -88,7 +89,7 @@ npm start
 ## How to explain the backend (demos / interviews)
 
 - **“Why layers?”**  
-  Routes define URLs and validation; controllers handle HTTP; services hold rules and external calls (OpenAI); models define data. That keeps each file small and testable.
+  Routes define URLs and validation; controllers handle HTTP; services hold rules and external calls (Gemini); models define data. That keeps each file small and testable.
 
 - **“What is the ~30% code idea?”**  
   The **full architecture** is visible in folders and filenames; the **core product path** is implemented (auth + resumes + AI). Placeholder files show where rate limits, jobs, and extra validators would live without bloating the demo.
@@ -100,7 +101,7 @@ npm start
 
 - **`Missing required env: MONGODB_URI`** — Set `.env` from `.env.example`.
 - **Mongo errors** — DB running or Atlas URI/firewall correct.
-- **AI 503** — Set `OPENAI_API_KEY` and restart.
+- **AI 503** — Set `GEMINI_API_KEY` and restart.
 
 ---
 
@@ -164,8 +165,8 @@ npm start
 | [`createResume`](src/services/resume.service.js) | [`resume.service.js`](src/services/resume.service.js) | Creates resume with title + content (default `{}`). |
 | [`updateResume`](src/services/resume.service.js) | [`resume.service.js`](src/services/resume.service.js) | Patches title/content on owned document; `404` if missing. |
 | [`deleteResume`](src/services/resume.service.js) | [`resume.service.js`](src/services/resume.service.js) | `deleteOne` by id + userId; `404` if nothing deleted. |
-| [`getClient`](src/services/ai.service.js) | [`ai.service.js`](src/services/ai.service.js) | Lazy singleton OpenAI client; `503` if `OPENAI_API_KEY` unset. |
-| [`suggestResumeSection`](src/services/ai.service.js) | [`ai.service.js`](src/services/ai.service.js) | Chat completion (`gpt-4o-mini`) with system prompt + section/context; returns trimmed suggestion text. |
+| [`getModel`](src/services/ai.service.js) | [`ai.service.js`](src/services/ai.service.js) | Lazy Gemini model (`GoogleGenerativeAI` + `getGenerativeModel`); `503` if `GEMINI_API_KEY` unset. |
+| [`suggestResumeSection`](src/services/ai.service.js) | [`ai.service.js`](src/services/ai.service.js) | `generateContent` with system instruction + section/context; returns trimmed suggestion text. |
 
 ### Models (`User.js`, `Resume.js`)
 

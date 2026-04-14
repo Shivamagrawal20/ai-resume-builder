@@ -10,7 +10,7 @@ export async function requireAuth(req, res, next) {
   }
   try {
     const payload = jwt.verify(token, env.jwtSecret);
-    const user = await User.findById(payload.sub).select("_id email name");
+    const user = await User.findById(payload.sub).select("_id email name isAdmin");
     if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }

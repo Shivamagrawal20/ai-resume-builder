@@ -11,6 +11,7 @@ export async function registerUser({ email, password, name }) {
     const err = new Error("Email already registered");
     err.statusCode = 409;
     throw err;
+    
   }
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
   const user = await User.create({ email, passwordHash, name });
@@ -40,10 +41,11 @@ function signToken(userId) {
   });
 }
 
-function toPublicUser(user) {
+export function toPublicUser(user) {
   return {
     id: user._id.toString(),
     email: user.email,
     name: user.name ?? "",
+    isAdmin: !!user.isAdmin,
   };
 }

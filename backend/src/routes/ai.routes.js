@@ -15,4 +15,11 @@ router.post(
   aiController.suggest
 );
 
+router.post(
+  "/ats-score",
+  [body("content").isObject(), body("jobDescription").optional().isString()],
+  validate,
+  aiController.atsScore
+);
+
 export default router;

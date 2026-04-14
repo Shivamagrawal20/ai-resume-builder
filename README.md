@@ -1,6 +1,6 @@
 # AI Resume Builder
 
-A small full-stack app: a **React** web UI talks to a **Node.js** API that stores resumes in **MongoDB** and can call **OpenAI** for section suggestions.
+A small full-stack app: a **React** web UI talks to a **Node.js** API that stores resumes in **MongoDB** and can call **Google Gemini** for section suggestions.
 
 ## What’s in this repo
 
@@ -31,14 +31,14 @@ Browser (React)
 Express API (Node) — layered: routes → controllers → services → models
     ├── JWT + bcrypt for auth
     ├── Mongoose → MongoDB (users + resumes)
-    └── OpenAI SDK (optional) for /api/ai/suggest
+    └── Google Generative AI (Gemini) (optional) for /api/ai/suggest
 ```
 
 ## Prerequisites
 
 - **Node.js** (LTS recommended)
 - **MongoDB** running locally or a connection string (e.g. MongoDB Atlas)
-- **OpenAI API key** (optional; only needed for AI suggestions)
+- **Gemini API key** (optional; only needed for AI suggestions — [Google AI Studio](https://aistudio.google.com/apikey))
 
 ## Quick start
 
@@ -47,7 +47,7 @@ Express API (Node) — layered: routes → controllers → services → models
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env: set MONGODB_URI, JWT_SECRET, and optionally OPENAI_API_KEY
+# Edit .env: set MONGODB_URI, JWT_SECRET, and optionally GEMINI_API_KEY
 npm install
 npm run dev
 ```
@@ -78,10 +78,10 @@ Serve the `frontend/dist/` static files with any static host. Set **`VITE_API_UR
 ## How to explain the project (short)
 
 **One sentence:**  
-“It’s a resume builder where users sign in, save resume data as JSON in MongoDB, and optionally get AI-suggested text for a section using OpenAI.”
+“It’s a resume builder where users sign in, save resume data as JSON in MongoDB, and optionally get AI-suggested text for a section using Google Gemini.”
 
 **Thirty seconds:**  
-“Frontend is React with Vite; it stores a JWT after login and calls REST endpoints. Backend is Express with a normal layered structure—routes, controllers, services, models—plus MongoDB for users and resumes. The AI route uses the OpenAI API when the key is configured.”
+“Frontend is React with Vite; it stores a JWT after login and calls REST endpoints. Backend is Express with a normal layered structure—routes, controllers, services, models—plus MongoDB for users and resumes. The AI route calls the Gemini API when `GEMINI_API_KEY` is configured.”
 
 **Two minutes:**  
 Walk through: **auth** (register → hash password, login → JWT), **resumes** (CRUD only for the logged-in user), **AI** (POST with section + context → model returns suggestion). Mention **security** (JWT + HTTPS in production, secrets in env) and **what you’d add next** (rate limits, PDF export, password reset).

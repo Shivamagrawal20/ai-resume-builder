@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LetsResume — Live Resume Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f2f1ec;--surface:#ffffff;--ink:#111118;--ink2:#2d2d3a;--muted:#888898;--border:#e0dfd8;--accent:#1a1a2e;--green:#16a34a;--blue:#2563eb;--panel:#1e1e2e;--r:8px;--r2:12px;--trans:0.2s cubic-bezier(0.4,0,0.2,1);--resume-accent:#1e3a5f}
+html{font-size:15px;height:100%}
+body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var(--ink);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.topbar{background:var(--panel);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.tb-left{display:flex;align-items:center;gap:16px}.tb-logo{font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px}.tb-logo-dot{width:8px;height:8px;background:#c8f135;border-radius:50%}
+.tb-file{font-size:13px;color:rgba(255,255,255,0.5);display:flex;align-items:center;gap:6px}.tb-file input{background:transparent;border:none;color:rgba(255,255,255,0.7);font-family:'Bricolage Grotesque',sans-serif;font-size:13px;outline:none;width:260px}
+.tb-saved{font-size:11px;color:rgba(255,255,255,0.3);display:flex;align-items:center;gap:4px}.saved-dot{width:5px;height:5px;background:#22c55e;border-radius:50%}
+.tb-center{display:flex;gap:4px}.tb-tab{padding:6px 14px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,0.4)}.tb-tab.active,.tb-tab:hover{background:rgba(255,255,255,0.08);color:#fff}
+.tb-right{display:flex;align-items:center;gap:10px}.tb-btn{padding:7px 16px;border-radius:100px;font-family:'Bricolage Grotesque',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none}.tb-btn.ghost{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1)}.tb-btn.primary{background:#c8f135;color:#111}
+.main{flex:1;display:flex;overflow:hidden;min-height:0}
+.editor-shell{position:relative;flex-shrink:0;display:flex;flex-direction:row;align-items:stretch;width:920px;min-height:0;transition:width .35s cubic-bezier(0.4,0,0.2,1);overflow:hidden}
+.main.form-collapsed .editor-shell{width:280px}
+.left-panel{width:280px;flex-shrink:0;background:#050512;border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;position:relative;z-index:4;box-shadow:4px 0 20px rgba(0,0,0,0.25)}
+.fp-edge-toggle{position:absolute;right:-14px;top:50%;transform:translateY(-50%);z-index:5;width:28px;height:56px;border:none;border-radius:0 10px 10px 0;background:#c8f135;color:#111;font-size:14px;font-weight:800;cursor:pointer;box-shadow:2px 0 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;transition:background .2s}
+.fp-edge-toggle:hover{background:#b5da2a}
+.main.form-collapsed .fp-edge-toggle{border-radius:10px 0 0 10px;right:auto;left:100%;margin-left:-14px;box-shadow:-2px 0 8px rgba(0,0,0,0.2)}
+.form-panel{width:640px;flex-shrink:0;background:#f3f4f6;border-right:1px solid #d9dbe0;display:flex;flex-direction:column;position:absolute;left:280px;top:0;bottom:0;z-index:1;transition:transform .35s cubic-bezier(0.4,0,0.2,1);box-shadow:6px 0 24px rgba(0,0,0,0.06)}
+.main.form-collapsed .form-panel{transform:translateX(-640px)}
+.lp-header{padding:24px 22px 10px}
+.lp-logo{color:#fff;font-size:18px;font-weight:700;line-height:1.1}
+.lp-logo span{color:#c8f135}
+.lp-sections{flex:1;overflow-y:auto;padding:8px 14px 14px}
+.step-item{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;cursor:pointer;margin-bottom:8px;transition:var(--trans)}
+.step-item:hover{background:rgba(255,255,255,.06)}
+.step-item.active{background:rgba(200,241,53,.14)}
+.step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:rgba(255,255,255,.55);font-weight:700;font-size:14px;flex-shrink:0;font-family:'Bricolage Grotesque',sans-serif}
+.step-item.active .step-num{background:#c8f135;color:#111}
+.step-label{color:rgba(255,255,255,.62);font-size:13px;font-weight:500;line-height:1}
+.step-item.active .step-label{color:#fff}
+.lp-quick{padding:12px;border-top:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02)}
+.lpq-title{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px}
+.lpq-field{margin-bottom:7px}
+.lpq-label{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:3px}
+.lpq-input,.lpq-text{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;color:#fff;padding:7px 8px;font-family:'Bricolage Grotesque',sans-serif;font-size:12px;outline:none}
+.lpq-text{min-height:66px;resize:vertical}
+.lpq-row{display:flex;gap:6px}
+.lpq-btn{flex:1;border:none;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:600;cursor:pointer}
+.lpq-btn.apply{background:#c8f135;color:#111}
+.lpq-btn.sync{background:rgba(255,255,255,.12);color:#fff}
+.step-form{display:none}
+.step-form.active{display:block}
+.lp-hint{font-size:11px;color:rgba(255,255,255,.35);line-height:1.5}
+.fp-header{padding:20px 24px 12px;border-bottom:1px solid #d9dbe0}
+.fp-title{font-size:24px;font-weight:700;color:#111827;letter-spacing:-0.3px}
+.fp-sub{font-size:14px;color:#6b7280;margin-top:4px}
+.fp-body{padding:16px 24px;overflow:auto;flex:1}
+.fp-status{font-size:12px;color:#6b7280;margin-bottom:14px}
+.fp-label{font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.fp-input,.fp-text{width:100%;border:2px solid #e5e7eb;border-radius:14px;padding:12px 14px;background:#f9fafb;font-size:18px;font-family:'Bricolage Grotesque',sans-serif;color:#111827;outline:none}
+.fp-input:focus,.fp-text:focus{border-color:#93c5fd;background:#fff}
+.fp-text{min-height:90px;resize:vertical}
+.fp-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fp-field{margin-bottom:12px}
+.fp-footer{padding:14px 24px;border-top:1px solid #d9dbe0;display:flex;justify-content:space-between;background:#f3f4f6}
+.fp-btn{padding:10px 20px;border-radius:999px;border:none;font-size:13px;font-weight:600;font-family:'Bricolage Grotesque',sans-serif;cursor:pointer}
+.fp-btn.back{background:#fff;border:1px solid #d1d5db;color:#111827}
+.fp-btn.next{background:#2563eb;color:#fff}
+.fp-entry-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.fp-entry-title{font-size:12px;font-weight:700;color:#374151}
+.fp-add{border:none;background:#eff6ff;color:#2563eb;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif}
+.fp-add:hover{background:#dbeafe}
+.fp-card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:10px;background:#fff}
+.fp-remove{margin-top:8px;border:none;background:#fef2f2;color:#b91c1c;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;cursor:pointer;width:100%}
+.editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.editor-toolbar{padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.et-group{display:flex;gap:3px;align-items:center}
+.et-sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.et-select{padding:5px 8px;border-radius:8px;border:1px solid var(--border);font-family:'Bricolage Grotesque',sans-serif;font-size:12px;background:var(--surface);color:var(--ink2);cursor:pointer;outline:none;min-width:52px}
+.et-btn{width:30px;height:28px;border-radius:5px;border:none;background:transparent;color:var(--ink2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}.et-btn:hover{background:var(--bg)}.et-btn.active{background:var(--bg);color:var(--blue)}
+.et-wide{padding:5px 10px!important;width:auto!important;font-size:11px!important;font-weight:600}
+.et-ai-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;font-family:'Bricolage Grotesque',sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;transition:opacity .2s,transform .2s;white-space:nowrap}
+.et-ai-btn:hover{opacity:.92;transform:translateY(-1px)}.et-ai-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.canvas-wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:24px 20px}.resume-paper{width:794px;min-height:1122px;background:#fff;box-shadow:0 4px 40px rgba(0,0,0,0.12);font-family:'Source Serif 4',Georgia,serif}
+.resume-accent-bar{height:6px;background:var(--resume-accent,#1e3a5f)}
+.resume-header{padding:32px 48px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-start}.rh-left{flex:1}
+.rh-name{font-family:'Bricolage Grotesque',sans-serif;font-size:30px;font-weight:800;color:#0f172a;margin-bottom:4px;outline:none}.rh-title{font-size:15px;color:var(--resume-accent,#1e3a5f);font-weight:600;margin-bottom:12px;outline:none}
+.rh-contact{display:flex;flex-wrap:wrap}.rh-contact-item{font-size:12px;color:#4b5563;display:flex;align-items:center;gap:5px;padding-right:12px;margin-right:12px;border-right:1px solid #e5e7eb}
+.resume-body{padding:0 48px 40px;display:flex;gap:32px}.resume-main{flex:1}.resume-aside{width:200px;flex-shrink:0}
+.r-section{margin-top:24px}.r-section-title{font-family:'Bricolage Grotesque',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--resume-accent,#1e3a5f);border-bottom:2px solid var(--resume-accent,#1e3a5f);padding-bottom:4px;margin-bottom:12px;outline:none}
+.r-summary{font-size:13px;color:#374151;line-height:1.75;outline:none;min-height:40px}.r-entry{margin-bottom:16px}.r-entry-title{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:700;color:#0f172a;outline:none}
+.r-entry-date{font-size:11px;color:#6b7280;font-family:'DM Mono',monospace;outline:none}.r-entry-sub{font-size:12px;color:var(--resume-accent,#1e3a5f);font-weight:600;margin-bottom:4px;outline:none}.r-entry-loc{font-size:11px;color:#9ca3af;outline:none}
+.r-bullets{padding-left:0;list-style:none;margin-top:6px}.r-bullet{font-size:12px;color:#374151;line-height:1.7;padding:2px 0 2px 14px;position:relative;outline:none}.r-bullet::before{content:'▸';position:absolute;left:0;color:var(--resume-accent,#1e3a5f);font-size:10px;top:4px}
+.skill-tag{font-size:11px;padding:3px 9px;border-radius:4px;background:#f3f4f6;color:#374151;font-family:'Bricolage Grotesque',sans-serif;border:1px solid #e5e7eb;outline:none;cursor:text}
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:#0f172a;color:#fff;border-radius:10px;padding:12px 18px;font-size:13px;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:8px;transform:translateY(80px);opacity:0;transition:all .35s}.toast.show{transform:translateY(0);opacity:1}
+/* Split teal sidebar template (live editor only) */
+.resume-paper.split-teal{background:#fff;font-family:'Source Serif 4',Georgia,serif;--split-teal:#0f7669;--split-teal-dark:#0d5f56}
+.resume-paper.split-teal .resume-accent-bar{display:none}
+.resume-paper.split-teal .split-shell{display:flex;min-height:1040px;width:100%}
+.resume-paper.split-teal .split-side{width:280px;flex-shrink:0;background:var(--split-teal);color:#fff;padding:28px 22px;display:flex;flex-direction:column;gap:22px;font-family:'Bricolage Grotesque',sans-serif}
+.resume-paper.split-teal .split-side-name{font-size:22px;font-weight:800;letter-spacing:.02em;line-height:1.2;outline:none;margin-bottom:4px}
+.resume-paper.split-teal .split-sec-h{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.85;margin-bottom:8px}
+.resume-paper.split-teal .split-side .r-section-title{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.95)!important;border:none!important;padding:0!important;margin-bottom:8px}
+.resume-paper.split-teal .split-line{font-size:12px;line-height:1.55;margin:0 0 6px;outline:none;position:relative;padding-left:12px}
+.resume-paper.split-teal .split-line::before{content:'•';position:absolute;left:0;opacity:.8}
+.resume-paper.split-teal #certEntries .r-bullet{color:#fff;font-size:12px}
+.resume-paper.split-teal .split-lang-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:6px;margin-bottom:6px}
+.resume-paper.split-teal .split-lang-name,.resume-paper.split-teal .split-lang-level{outline:none}
+.resume-paper.split-teal .split-body{flex:1;background:#fff;color:#1e293b}
+.resume-paper.split-teal .split-body-pad{padding:28px 32px 36px}
+.resume-paper.split-teal .split-main-header{margin-bottom:18px}
+.resume-paper.split-teal .split-main-header .rh-title{font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:var(--split-teal);margin-bottom:8px}
+.resume-paper.split-teal .split-main-header .rh-contact{flex-wrap:wrap;gap:8px 0}
+.resume-paper.split-teal .split-main-header .rh-contact-item{font-size:11px;color:#64748b;border-right:1px solid #e2e8f0;padding-right:10px;margin-right:10px}
+.resume-paper.split-teal .split-main-header .rh-contact-item:last-child{border-right:none}
+.resume-paper.split-teal .r-section{margin-top:20px}
+.resume-paper.split-teal .r-section-title{font-family:'Bricolage Grotesque',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--split-teal);border-bottom:2px solid var(--split-teal);padding-bottom:4px;margin-bottom:10px}
+.resume-paper.split-teal .r-summary{font-size:12px;color:#334155;line-height:1.75}
+.resume-paper.split-teal .r-entry-title{color:#0f172a}
+.resume-paper.split-teal .r-entry-sub{color:var(--split-teal)}
+.resume-paper.split-teal .r-bullet{color:#334155}
+.resume-paper.split-teal #rSkills .skill-tag{font-size:11px;background:#f1f5f9;border-color:#e2e8f0}
+/* GLA ATS single-column template */
+.resume-paper.gla-ats{background:#fff;font-family:'Source Serif 4',Georgia,'Times New Roman',serif;color:#111827}
+.resume-paper.gla-ats .resume-accent-bar{display:none}
+.resume-paper.gla-ats .gla-shell{padding:28px 36px 36px;max-width:100%}
+.resume-paper.gla-ats .gla-header{margin-bottom:14px;border-bottom:1px solid #e5e7eb;padding-bottom:10px}
+.resume-paper.gla-ats .gla-name{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.02em}
+.resume-paper.gla-ats .gla-meta-line{font-size:11px;color:#374151;margin:3px 0 0;line-height:1.5}
+.resume-paper.gla-ats .gla-sec{margin-top:14px}
+.resume-paper.gla-ats .gla-sec .r-section-title,.resume-paper.gla-ats .gla-sec-title{font-family:'Bricolage Grotesque',sans-serif;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#0f172a;border-bottom:1px solid #0f172a;padding-bottom:3px;margin-bottom:8px}
+.resume-paper.gla-ats .gla-summary,.resume-paper.gla-ats .gla-sec .r-summary{font-size:11.5px;line-height:1.65;color:#1e293b}
+.resume-paper.gla-ats .r-entry-title{font-size:12px}
+.resume-paper.gla-ats .r-entry-sub{font-size:11px;color:#334155}
+.resume-paper.gla-ats .r-entry-date{font-size:10px;color:#64748b}
+.resume-paper.gla-ats .r-bullet{font-size:11px;line-height:1.55}
+.resume-paper.gla-ats .gla-skills-body .gla-skill-p{font-size:11px;line-height:1.55;margin:4px 0;color:#1e293b}
+.resume-paper.gla-ats .gla-skills-body strong{color:#0f172a;font-weight:700}
+.resume-paper.gla-ats .gla-decl-text{font-size:11px;line-height:1.6;color:#334155;font-style:italic}
+@media print{.topbar,.left-panel,.form-panel,.fp-edge-toggle,.editor-toolbar{display:none!important}.main{display:block}.canvas-wrap{padding:0!important}.resume-paper{box-shadow:none!important;width:100%!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo"><div class="tb-logo-dot"></div>LetsResume</div>
+    <div class="tb-file"><span style="color:rgba(255,255,255,0.25)">/</span><input type="text" id="docName" value="Full Stack Developer Resume"/></div>
+    <div class="tb-saved" id="saveState"><div class="saved-dot"></div><span>Auto-saved</span></div>
+  </div>
+  <div class="tb-center"><button class="tb-tab active" onclick="setView('edit',this)">Edit</button><button class="tb-tab" onclick="setView('preview',this)">Preview</button></div>
+  <div class="tb-right"><button class="tb-btn ghost" onclick="window.print()">↓ PDF</button><button class="tb-btn primary" onclick="manualSave()">Save</button><a class="tb-btn ghost" href="/dashboard.html" style="text-decoration:none">Dashboard</a></div>
+</div>
+<div class="main" id="mainEditor">
+  <div class="editor-shell">
+  <div class="left-panel" id="leftPanel">
+    <button type="button" class="fp-edge-toggle" id="fpEdgeToggle" onclick="toggleFormPanel()" title="Hide form panel" aria-expanded="true" aria-controls="formPanel">&#171;</button>
+    <div class="lp-header"><div class="lp-logo">Lets<span>Resume</span></div></div>
+    <div class="lp-sections">
+      <div class="step-item active" data-form="header" onclick="scrollToSection('#rHeader',this)"><div class="step-num">1</div><div class="step-label">Header</div></div>
+      <div class="step-item" data-form="experience" onclick="scrollToSection('#rExperience',this)"><div class="step-num">2</div><div class="step-label">Experience</div></div>
+      <div class="step-item" data-form="education" onclick="scrollToSection('#rEducation',this)"><div class="step-num">3</div><div class="step-label">Education</div></div>
+      <div class="step-item" data-form="certifications" onclick="scrollToSection('#rCerts',this)"><div class="step-num">4</div><div class="step-label">Certifications</div></div>
+      <div class="step-item" data-form="skills" onclick="scrollToSection('#rSkills',this)"><div class="step-num">5</div><div class="step-label">Skills</div></div>
+      <div class="step-item" data-form="summary" onclick="scrollToSection('#rSummary',this)"><div class="step-num">6</div><div class="step-label">Summary</div></div>
+      <div class="step-item" data-form="finalize" onclick="scrollToSection('#rFinalize',this)"><div class="step-num">7</div><div class="step-label">Finalize</div></div>
+    </div>
+  </div>
+  <div class="form-panel" id="formPanel" role="region" aria-label="Section form">
+    <div class="fp-header">
+      <div class="fp-title" id="formTitle">Let's start with your header</div>
+      <div class="fp-sub" id="formSub">Include contact details.</div>
+    </div>
+    <div class="fp-body">
+      <div class="fp-status">Unsaved changes.</div>
+      <div class="step-form active" id="form-header">
+        <div class="fp-row">
+          <div class="fp-field"><div class="fp-label">Full Name</div><input id="qName" class="fp-input" /></div>
+          <div class="fp-field"><div class="fp-label">Job Title</div><input id="qTitle" class="fp-input" /></div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-field"><div class="fp-label">Phone</div><input id="qPhone" class="fp-input" /></div>
+          <div class="fp-field"><div class="fp-label">Email</div><input id="qEmail" class="fp-input" /></div>
+        </div>
+        <div class="fp-field"><div class="fp-label">LinkedIn</div><input id="qLinkedin" class="fp-input" /></div>
+      </div>
+      <div class="step-form" id="form-experience">
+        <div class="fp-entry-top"><span class="fp-entry-title">Experience</span><button type="button" class="fp-add" onclick="addExperienceRow()">+ Add</button></div>
+        <div id="formExperienceList"></div>
+      </div>
+      <div class="step-form" id="form-education">
+        <div class="fp-entry-top"><span class="fp-entry-title">Education</span><button type="button" class="fp-add" onclick="addEducationRow()">+ Add</button></div>
+        <div id="formEducationList"></div>
+      </div>
+      <div class="step-form" id="form-certifications">
+        <div class="fp-entry-top"><span class="fp-entry-title">Certifications</span><button type="button" class="fp-add" onclick="addCertRow()">+ Add</button></div>
+        <div id="formCertList"></div>
+      </div>
+      <div class="step-form" id="form-skills">
+        <div class="fp-field"><div class="fp-label">Skills (comma separated)</div><textarea id="qSkills" class="fp-text"></textarea></div>
+      </div>
+      <div class="step-form" id="form-summary">
+        <div class="fp-field"><div class="fp-label">Professional Summary</div><textarea id="qSummary" class="fp-text"></textarea></div>
+      </div>
+      <div class="step-form" id="form-finalize">
+        <div class="lp-hint" style="color:#4b5563">Review details, then click Save in top bar to store changes.</div>
+      </div>
+    </div>
+    <div class="fp-footer">
+      <button class="fp-btn back" type="button" onclick="prevStep()">Back</button>
+      <div style="display:flex;gap:8px">
+        <button class="fp-btn back" type="button" onclick="syncFormFromCanvas()">Sync</button>
+        <button class="fp-btn next" type="button" onclick="nextStep()">Continue</button>
+      </div>
+    </div>
+  </div>
+  </div>
+  <div class="editor-area">
+    <div class="editor-toolbar" id="editorToolbar">
+      <div class="et-group">
+        <select class="et-select" id="etFontSize" title="Font size" onchange="execFontSize(this.value)">
+          <option value="1">10</option>
+          <option value="2">12</option>
+          <option value="3" selected>14</option>
+          <option value="4">16</option>
+          <option value="5">18</option>
+        </select>
+      </div>
+      <div class="et-sep"></div>
+      <div class="et-group">
+        <button type="button" class="et-btn" onclick="execCmd('bold')" title="Bold"><b>B</b></button>
+        <button type="button" class="et-btn" onclick="execCmd('italic')" title="Italic"><i>I</i></button>
+        <button type="button" class="et-btn" onclick="execCmd('underline')" title="Underline"><u>U</u></button>
+      </div>
+      <div class="et-sep"></div>
+      <div class="et-group">
+        <button type="button" class="et-btn" onclick="execCmd('justifyLeft')" title="Align left">&#8592;</button>
+        <button type="button" class="et-btn" onclick="execCmd('justifyCenter')" title="Center">&#8596;</button>
+        <button type="button" class="et-btn" onclick="execCmd('justifyRight')" title="Align right">&#8594;</button>
+      </div>
+      <div class="et-sep"></div>
+      <div class="et-group">
+        <button type="button" class="et-btn" onclick="execCmd('undo')" title="Undo">&#8630;</button>
+        <button type="button" class="et-btn" onclick="execCmd('redo')" title="Redo">&#8631;</button>
+      </div>
+      <div class="et-sep"></div>
+      <div class="et-group">
+        <button type="button" class="et-btn et-wide" onclick="addEntryFromToolbar()" title="Add experience entry">+ Entry</button>
+        <button type="button" class="et-btn et-wide" onclick="addBulletFromToolbar()" title="Add bullet">+ Bullet</button>
+      </div>
+      <button type="button" class="et-ai-btn" id="etAiBtn" onclick="aiEnhanceSelected()" title="Improve selected text with AI">&#10022; AI Enhance Selected</button>
+    </div>
+    <div class="canvas-wrap"><div class="resume-paper" id="resumePaper"><div class="resume-accent-bar" id="accentBar"></div>
+      <div class="resume-header" id="rHeader"><div class="rh-left"><div class="rh-name" contenteditable="true">Shivam Agrawal</div><div class="rh-title" contenteditable="true">Full Stack Developer · MERN Stack</div><div class="rh-contact"><div class="rh-contact-item"><span>✉</span><span contenteditable="true">shivam.agrawal@email.com</span></div><div class="rh-contact-item"><span>📞</span><span contenteditable="true">+91 97535 43210</span></div><div class="rh-contact-item"><span>🔗</span><span contenteditable="true">linkedin.com/in/shivam</span></div></div></div></div>
+      <div class="resume-body"><div class="resume-main">
+        <div class="r-section" id="rSummary"><div class="r-section-title" contenteditable="true">Professional Summary</div><div class="r-summary" contenteditable="true">Results-driven Full Stack Developer with 2+ years of hands-on experience architecting scalable MERN stack applications.</div></div>
+        <div class="r-section" id="rExperience"><div class="r-section-title" contenteditable="true">Work Experience</div><div id="experienceEntries"></div></div>
+        <div class="r-section" id="rEducation"><div class="r-section-title" contenteditable="true">Education</div><div id="educationEntries"></div></div>
+        <div class="r-section" id="rCerts"><div class="r-section-title" contenteditable="true">Certifications</div><ul class="r-bullets" id="certEntries"></ul></div>
+        <div class="r-section" id="rFinalize"><div class="r-section-title">Finalize</div><div class="r-summary">Review all sections, run ATS score, then save and export PDF.</div></div>
+      </div><div class="resume-aside"><div class="r-section" id="rSkills"><div class="r-section-title" style="font-size:10px" contenteditable="true">Technical Skills</div><div><span class="skill-tag" contenteditable="true">React.js</span> <span class="skill-tag" contenteditable="true">Node.js</span> <span class="skill-tag" contenteditable="true">MongoDB</span></div></div></div></div>
+    </div></div>
+  </div>
+</div>
+<div class="toast" id="toast"><span id="toastIcon">✓</span><span id="toastText">Saved!</span></div>
+<script>
+const TOKEN_KEY = "arb_token";
+const params = new URLSearchParams(window.location.search);
+let resumeId = params.get("resumeId");
+let saveTimer = null;
+let saveInFlight = false;
+let renderExpTimer = null;
+let experiences = [
+  {
+    role: "Full Stack Developer",
+    dateRange: "Jan 2023 – Present",
+    company: "Acme Technologies Pvt. Ltd.",
+    loc: "Noida, India",
+    bulletsText: "Built React dashboards for 10K+ users.\nReduced API response time by 35%.",
+  },
+];
+let educations = [
+  { degree: "B.Tech — Computer Science & Engineering", duration: "2027 (Expected)", institution: "GLA University", score: "8.4 / 10" },
+];
+let certifications = [
+  { name: "MongoDB Certified Developer Associate" },
+  { name: "AWS Cloud Practitioner Essentials" },
+];
+let achievements = [
+  "Shipped features used by 10K+ daily active users",
+  "Improved API latency by 35% through profiling and caching",
+];
+let passions = ["Clean code", "Mentoring", "System design"];
+let languages = [
+  { name: "English", level: "Professional" },
+  { name: "Hindi", level: "Native" },
+];
+let trainingExperiences = [
+  {
+    role: "Graphic Designer Intern",
+    dateRange: "2025 – Present",
+    company: "Code With Techno",
+    loc: "",
+    bulletsText: "Developed templates using HTML, CSS, Canva, and Figma.",
+  },
+];
+let projectEntries = [
+  {
+    role: "Learnershut",
+    dateRange: "2024 – Present",
+    company: "",
+    loc: "",
+    bulletsText: "Built full-stack platform with React and Node.js.\nHandled 1000+ quiz submissions.",
+  },
+];
+let glaSkills = {
+  languages: "C, Java, Python, JavaScript, TypeScript",
+  databases: "MySQL, PostgreSQL, MongoDB",
+  tools: "Git, Postman, Figma",
+  certifications: "Google Cybersecurity",
+};
+let professionalAchievements = ["Top performer among 4000 participants in national event", "Runner-up in global hackathon (team of 4)"];
+let coCurricular = ["Delegate at AI Summit India", "Member of university technical society"];
+let declarationText = "I hereby declare that the above information is true to the best of my knowledge.";
+const LIVE_FIELD_PROFILES = {
+  tech: {
+    docTitle: "Software Engineer Resume",
+    jobTitle: "Full Stack Developer · MERN Stack",
+    summary: "Software engineer focused on shipping reliable web products and APIs. Strong in modern JavaScript, scalable backends, and measurable impact—performance, uptime, and user growth.",
+    skillsSectionTitle: "Technical Skills",
+    skillTags: ["JavaScript", "TypeScript", "React", "Node.js", "MongoDB", "REST APIs", "Git", "AWS", "CI/CD", "Agile"],
+    experiences: [
+      {
+        role: "Software Engineer",
+        dateRange: "Jan 2023 – Present",
+        company: "Acme Technologies Pvt. Ltd.",
+        loc: "Noida, India",
+        bulletsText: "Built React and Node.js features for 10K+ daily users; improved API latency by 35%.\nOwned tests, code review, and releases in a CI/CD pipeline with monitoring and rollback.",
+      },
+    ],
+    educations: [{ degree: "B.Tech — Computer Science", duration: "2023 – 2027", institution: "Your University" }],
+    certifications: [{ name: "AWS Cloud Practitioner" }, { name: "MongoDB Developer Associate" }],
+  },
+  business: {
+    docTitle: "Business Analyst Resume",
+    jobTitle: "Business Analyst · Strategy & Operations",
+    summary: "Analytical professional turning business goals into requirements, metrics, and process improvements. Experienced with stakeholders, data, documentation, and cross-functional delivery.",
+    skillsSectionTitle: "Core Competencies",
+    skillTags: ["Requirements", "SQL", "Excel", "KPIs", "Process mapping", "Stakeholder mgmt", "Agile", "Forecasting", "Presentations"],
+    experiences: [
+      {
+        role: "Business Analyst",
+        dateRange: "Jun 2022 – Present",
+        company: "Growth Partners Ltd.",
+        loc: "Remote",
+        bulletsText: "Facilitated discovery workshops; documented user stories and acceptance criteria for finance workflows.\nBuilt leadership dashboards; reduced approval cycle time ~20% through process redesign.",
+      },
+    ],
+    educations: [{ degree: "BBA — Business Administration", duration: "2020 – 2024", institution: "Your University" }],
+    certifications: [{ name: "Google Data Analytics" }, { name: "Agile Fundamentals" }],
+  },
+  marketing: {
+    docTitle: "Marketing Resume",
+    jobTitle: "Digital Marketing Specialist · Growth",
+    summary: "Marketing generalist focused on acquisition and engagement. Comfortable with paid and organic channels, funnel metrics, and collaborating with sales and creative on campaigns.",
+    skillsSectionTitle: "Marketing Skills",
+    skillTags: ["SEO", "SEM", "Analytics", "Content", "Social", "Email", "A/B testing", "Copywriting", "CRM", "Brand"],
+    experiences: [
+      {
+        role: "Marketing Associate",
+        dateRange: "Mar 2022 – Present",
+        company: "Bright Media Co.",
+        loc: "Mumbai, India",
+        bulletsText: "Ran paid search and social campaigns; improved CTR through audience and creative tests.\nReported on ROAS, CAC, and channel mix; aligned launches with design and sales.",
+      },
+    ],
+    educations: [{ degree: "B.A. — Marketing", duration: "2019 – 2023", institution: "Your University" }],
+    certifications: [{ name: "Google Ads Search" }, { name: "HubSpot Inbound" }],
+  },
+  design: {
+    docTitle: "Product Designer Resume",
+    jobTitle: "Product Designer · UX / UI",
+    summary: "Designer focused on clear flows and cohesive interfaces. Partners with PM and engineering from discovery through handoff; uses research and iteration to ship usable products.",
+    skillsSectionTitle: "Design Skills",
+    skillTags: ["Figma", "Research", "Prototyping", "Design systems", "Usability", "Accessibility", "UI", "Workshops"],
+    experiences: [
+      {
+        role: "Product Designer",
+        dateRange: "Aug 2021 – Present",
+        company: "Studio North",
+        loc: "Bangalore, India",
+        bulletsText: "End-to-end design for web features; usability tests informed roadmap priorities.\nMaintained component library in Figma; reduced design QA issues through consistent patterns.",
+      },
+    ],
+    educations: [{ degree: "B.Des — Interaction Design", duration: "2018 – 2022", institution: "Your University" }],
+    certifications: [{ name: "NN/g UX Certificate" }, { name: "Interaction Design Foundation" }],
+  },
+};
+function applyLiveFieldProfile(field) {
+  const p = LIVE_FIELD_PROFILES[field] || LIVE_FIELD_PROFILES.tech;
+  experiences = JSON.parse(JSON.stringify(p.experiences));
+  educations = JSON.parse(JSON.stringify(p.educations));
+  certifications = JSON.parse(JSON.stringify(p.certifications));
+  const titleEl = document.querySelector(".rh-title");
+  if (titleEl) titleEl.textContent = p.jobTitle;
+  const sumEl = document.querySelector(".r-summary");
+  if (sumEl) sumEl.textContent = p.summary;
+  const skillsRoot = document.getElementById("rSkills");
+  if (skillsRoot && p.skillTags && p.skillTags.length) {
+    skillsRoot.innerHTML =
+      "<div class='r-section-title' style='font-size:10px' contenteditable='true'>" +
+      escapeHtml(p.skillsSectionTitle) +
+      "</div><div>" +
+      p.skillTags.map((s) => "<span class='skill-tag' contenteditable='true'>" + escapeHtml(s) + "</span>").join(" ") +
+      "</div>";
+  }
+  const dn = document.getElementById("docName");
+  if (dn && p.docTitle) dn.value = p.docTitle;
+  renderAllFromData();
+  syncFormFromCanvas();
+}
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+function getLayoutVariant() {
+  return window.__liveLayoutVariant || "classic";
+}
+function setLayoutVariant(v) {
+  window.__liveLayoutVariant = v;
+  try {
+    localStorage.setItem("liveEditorLayoutVariant", v);
+  } catch (e) {}
+}
+function buildClassicResumeInnerHtml() {
+  return `<div class="resume-accent-bar" id="accentBar"></div>
+      <div class="resume-header" id="rHeader"><div class="rh-left"><div class="rh-name" contenteditable="true">Your Name</div><div class="rh-title" contenteditable="true">Job Title</div><div class="rh-contact"><div class="rh-contact-item"><span>✉</span><span contenteditable="true">email@example.com</span></div><div class="rh-contact-item"><span>📞</span><span contenteditable="true">+1 234 567 8900</span></div><div class="rh-contact-item"><span>🔗</span><span contenteditable="true">linkedin.com/in/you</span></div></div></div></div>
+      <div class="resume-body"><div class="resume-main">
+        <div class="r-section" id="rSummary"><div class="r-section-title" contenteditable="true">Professional Summary</div><div class="r-summary" contenteditable="true">Write a concise summary tailored to your target role.</div></div>
+        <div class="r-section" id="rExperience"><div class="r-section-title" contenteditable="true">Work Experience</div><div id="experienceEntries"></div></div>
+        <div class="r-section" id="rEducation"><div class="r-section-title" contenteditable="true">Education</div><div id="educationEntries"></div></div>
+        <div class="r-section" id="rCerts"><div class="r-section-title" contenteditable="true">Certifications</div><ul class="r-bullets" id="certEntries"></ul></div>
+        <div class="r-section" id="rFinalize"><div class="r-section-title">Finalize</div><div class="r-summary">Review all sections, run ATS score, then save and export PDF.</div></div>
+      </div><div class="resume-aside"><div class="r-section" id="rSkills"><div class="r-section-title" style="font-size:10px" contenteditable="true">Technical Skills</div><div><span class="skill-tag" contenteditable="true">Skill 1</span> <span class="skill-tag" contenteditable="true">Skill 2</span></div></div></div></div>`;
+}
+function buildSplitTealResumeInnerHtml() {
+  return `<div class="split-shell">
+      <aside class="split-side">
+        <div class="split-side-name rh-name" contenteditable="true">Your Name</div>
+        <div class="split-side-block">
+          <div class="split-sec-h">Key achievements</div>
+          <div id="achievementEntries" class="split-lines"></div>
+        </div>
+        <div class="r-section" id="rCerts" style="margin-top:4px">
+          <div class="r-section-title" contenteditable="true">Certifications</div>
+          <ul class="r-bullets" id="certEntries"></ul>
+        </div>
+        <div class="split-side-block">
+          <div class="split-sec-h">Passions</div>
+          <div id="passionEntries" class="split-lines"></div>
+        </div>
+        <div class="split-side-block">
+          <div class="split-sec-h">Languages</div>
+          <div id="languageEntries"></div>
+        </div>
+      </aside>
+      <div class="split-body">
+        <div class="split-body-pad">
+          <div id="rHeader" class="split-main-header">
+            <div class="rh-title" contenteditable="true">Job Title</div>
+            <div class="rh-contact">
+              <div class="rh-contact-item"><span>✉</span><span contenteditable="true">email@example.com</span></div>
+              <div class="rh-contact-item"><span>📞</span><span contenteditable="true">+1 234 567 8900</span></div>
+              <div class="rh-contact-item"><span>🔗</span><span contenteditable="true">linkedin.com/in/you</span></div>
+            </div>
+          </div>
+          <div class="r-section" id="rSummary"><div class="r-section-title" contenteditable="true">Summary</div><div class="r-summary" contenteditable="true">Write a concise professional summary.</div></div>
+          <div class="r-section" id="rExperience"><div class="r-section-title" contenteditable="true">Experience</div><div id="experienceEntries"></div></div>
+          <div class="r-section" id="rSkills"><div class="r-section-title" style="font-size:11px" contenteditable="true">Skills</div><div><span class="skill-tag" contenteditable="true">React</span> <span class="skill-tag" contenteditable="true">Node.js</span></div></div>
+          <div class="r-section" id="rEducation"><div class="r-section-title" contenteditable="true">Education</div><div id="educationEntries"></div></div>
+          <div class="r-section" id="rFinalize"><div class="r-section-title">Finalize</div><div class="r-summary">Review sections, save, and export PDF.</div></div>
+        </div>
+      </div>
+    </div>`;
+}
+function buildGlaResumeInnerHtml() {
+  return `<div class="gla-shell">
+  <div id="rHeader" class="gla-header">
+    <h1 class="rh-name gla-name" contenteditable="true">Your Name</h1>
+    <p class="gla-meta-line"><span class="gla-loc" contenteditable="true">City</span> | <span class="gla-phone" contenteditable="true">+91 XXXXX XXXXX</span> | <span class="gla-em" contenteditable="true">you@email.com</span></p>
+    <p class="gla-meta-line"><span class="gla-li" contenteditable="true">linkedin.com/in/you</span> | <span class="gla-gh" contenteditable="true">github.com/you</span> | <span class="gla-wb" contenteditable="true">yourwebsite.com</span></p>
+  </div>
+  <div id="rSummary" class="r-section gla-sec"><div class="r-section-title gla-sec-title" contenteditable="true">SUMMARY</div><div class="r-summary gla-summary" contenteditable="true">Full-stack developer building scalable web applications. Strong in modern JavaScript, APIs, and measurable delivery.</div></div>
+  <div id="rEducation" class="r-section gla-sec"><div class="r-section-title gla-sec-title" contenteditable="true">EDUCATION</div><div id="educationEntries"></div></div>
+  <div id="glaTraining" class="r-section gla-sec"><div class="r-section-title gla-sec-title" contenteditable="true">TRAINING EXPERIENCE</div><div id="trainingEntries"></div></div>
+  <div id="glaProjects" class="r-section gla-sec"><div class="r-section-title gla-sec-title" contenteditable="true">PROJECTS</div><div id="projectEntries"></div></div>
+  <div id="glaSkills" class="r-section gla-sec"><div class="r-section-title gla-sec-title" contenteditable="true">SKILLS</div><div id="glaSkillsBody" class="gla-skills-body"></div></div>
+  <div id="glaProfAchieve" class="r-section gla-sec"><div class="r-section-title gla-sec-title" contenteditable="true">PROFESSIONAL ACHIEVEMENTS</div><ul class="r-bullets" id="glaProfList"></ul></div>
+  <div id="glaActivities" class="r-section gla-sec"><div class="r-section-title gla-sec-title" contenteditable="true">CO-CURRICULAR ACTIVITIES</div><ul class="r-bullets" id="glaActList"></ul></div>
+  <div id="glaDeclaration" class="r-section gla-sec"><div class="r-section-title gla-sec-title" contenteditable="true">DECLARATION</div><p class="gla-decl-text" contenteditable="true">I hereby declare that the above information is true to the best of my knowledge.</p></div>
+  <div id="rFinalize" class="r-section gla-sec"><div class="r-section-title">FINALIZE</div><p class="r-summary">Review all sections, save, and export PDF.</p></div>
+</div>`;
+}
+function applyResumeLayoutTemplate(variant, skipSave) {
+  const paper = document.getElementById("resumePaper");
+  if (!paper) return;
+  parseExperienceFromCanvas();
+  parseEducationFromCanvas();
+  parseCertsFromCanvas();
+  if (getLayoutVariant() === "split-teal") {
+    parseAchievementsFromCanvas();
+    parsePassionsFromCanvas();
+    parseLanguagesFromCanvas();
+  }
+  if (getLayoutVariant() === "gla-ats") parseGlaStateFromCanvas();
+  syncFormFromCanvas();
+  if (variant === "gla-ats" && (!trainingExperiences.length || (trainingExperiences.length === 1 && !trainingExperiences[0].role))) {
+    trainingExperiences = JSON.parse(JSON.stringify(experiences));
+  }
+  setLayoutVariant(variant);
+  if (variant === "split-teal") {
+    paper.className = "resume-paper split-teal";
+    paper.innerHTML = buildSplitTealResumeInnerHtml();
+  } else if (variant === "gla-ats") {
+    paper.className = "resume-paper gla-ats";
+    paper.innerHTML = buildGlaResumeInnerHtml();
+  } else {
+    paper.className = "resume-paper";
+    paper.innerHTML = buildClassicResumeInnerHtml();
+  }
+  normalizeSectionWrappers();
+  renderAllFromData();
+  applyHeaderSummarySkills();
+  if (!skipSave) scheduleSave();
+}
+function parseGlaStateFromCanvas() {
+  parseTrainingFromCanvas();
+  parseProjectFromCanvas();
+  parseGlaSkillsFromCanvas();
+  const pl = document.getElementById("glaProfList");
+  if (pl) {
+    const ls = Array.from(pl.querySelectorAll(".r-bullet"))
+      .map((li) => li.textContent.trim())
+      .filter(Boolean);
+    if (ls.length) professionalAchievements = ls;
+  }
+  const al = document.getElementById("glaActList");
+  if (al) {
+    const ls = Array.from(al.querySelectorAll(".r-bullet"))
+      .map((li) => li.textContent.trim())
+      .filter(Boolean);
+    if (ls.length) coCurricular = ls;
+  }
+  const decl = document.querySelector(".gla-decl-text");
+  if (decl && decl.textContent.trim()) declarationText = decl.textContent.trim();
+}
+function parseTrainingFromCanvas() {
+  const nodes = document.querySelectorAll("#trainingEntries .r-entry");
+  if (!nodes.length) return;
+  trainingExperiences = Array.from(nodes).map((node) => {
+    const bullets = Array.from(node.querySelectorAll(".r-bullet"))
+      .map((li) => li.textContent.trim())
+      .filter(Boolean)
+      .join("\n");
+    return {
+      role: node.querySelector(".r-entry-title")?.textContent?.trim() || "",
+      dateRange: node.querySelector(".r-entry-date")?.textContent?.trim() || "",
+      company: node.querySelector(".r-entry-sub")?.textContent?.trim() || "",
+      loc: node.querySelector(".r-entry-loc")?.textContent?.trim() || "",
+      bulletsText: bullets,
+    };
+  });
+}
+function parseProjectFromCanvas() {
+  const nodes = document.querySelectorAll("#projectEntries .r-entry");
+  if (!nodes.length) return;
+  projectEntries = Array.from(nodes).map((node) => {
+    const bullets = Array.from(node.querySelectorAll(".r-bullet"))
+      .map((li) => li.textContent.trim())
+      .filter(Boolean)
+      .join("\n");
+    return {
+      role: node.querySelector(".r-entry-title")?.textContent?.trim() || "",
+      dateRange: node.querySelector(".r-entry-date")?.textContent?.trim() || "",
+      company: node.querySelector(".r-entry-sub")?.textContent?.trim() || "",
+      loc: node.querySelector(".r-entry-loc")?.textContent?.trim() || "",
+      bulletsText: bullets,
+    };
+  });
+}
+function parseGlaSkillsFromCanvas() {
+  const root = document.getElementById("glaSkillsBody");
+  if (!root) return;
+  root.querySelectorAll(".gla-sk").forEach((span) => {
+    const k = span.getAttribute("data-gk");
+    if (k && glaSkills[k] !== undefined) glaSkills[k] = span.textContent.trim();
+  });
+}
+function renderGlaSkillsBody() {
+  const root = document.getElementById("glaSkillsBody");
+  if (!root) return;
+  const g = glaSkills;
+  const row = (label, key) =>
+    `<p class="gla-skill-p"><strong>${label}:</strong> <span class="gla-sk" data-gk="${key}" contenteditable="true">${escapeHtml(g[key] || "")}</span></p>`;
+  root.innerHTML = row("Languages", "languages") + row("Databases", "databases") + row("Tools", "tools") + row("Certifications", "certifications");
+}
+function renderTrainingCanvas() {
+  const root = document.getElementById("trainingEntries");
+  if (!root) return;
+  root.innerHTML = trainingExperiences
+    .map(
+      (exp) => `
+    <div class="r-entry">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+        <div class="r-entry-title" contenteditable="true">${escapeHtml(exp.role)}</div>
+        <div class="r-entry-date" contenteditable="true">${escapeHtml(exp.dateRange)}</div>
+      </div>
+      <div class="r-entry-sub" contenteditable="true">${escapeHtml(exp.company)}</div>
+      <div class="r-entry-loc" contenteditable="true">${escapeHtml(exp.loc)}</div>
+      <ul class="r-bullets">${exp.bulletsText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => `<li class="r-bullet" contenteditable="true">${escapeHtml(line)}</li>`)
+        .join("")}</ul>
+    </div>`
+    )
+    .join("");
+}
+function renderProjectCanvas() {
+  const root = document.getElementById("projectEntries");
+  if (!root) return;
+  root.innerHTML = projectEntries
+    .map(
+      (exp) => `
+    <div class="r-entry">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+        <div class="r-entry-title" contenteditable="true">${escapeHtml(exp.role)}</div>
+        <div class="r-entry-date" contenteditable="true">${escapeHtml(exp.dateRange)}</div>
+      </div>
+      <ul class="r-bullets">${exp.bulletsText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => `<li class="r-bullet" contenteditable="true">${escapeHtml(line)}</li>`)
+        .join("")}</ul>
+    </div>`
+    )
+    .join("");
+}
+function renderGlaBulletList(ulId, arr) {
+  const ul = document.getElementById(ulId);
+  if (!ul) return;
+  ul.innerHTML = arr.map((t) => `<li class="r-bullet" contenteditable="true">${escapeHtml(t)}</li>`).join("");
+}
+function renderAchievementCanvas() {
+  const root = document.getElementById("achievementEntries");
+  if (!root) return;
+  root.innerHTML = achievements
+    .map((line) => `<p class="split-line" contenteditable="true">${escapeHtml(line)}</p>`)
+    .join("");
+}
+function renderPassionCanvas() {
+  const root = document.getElementById("passionEntries");
+  if (!root) return;
+  root.innerHTML = passions
+    .map((line) => `<p class="split-line" contenteditable="true">${escapeHtml(line)}</p>`)
+    .join("");
+}
+function renderLanguageCanvas() {
+  const root = document.getElementById("languageEntries");
+  if (!root) return;
+  root.innerHTML = languages
+    .map(
+      (lang) =>
+        `<div class="split-lang-row"><span class="split-lang-name" contenteditable="true">${escapeHtml(lang.name)}</span><span class="split-lang-level" contenteditable="true">${escapeHtml(lang.level)}</span></div>`
+    )
+    .join("");
+}
+function parseAchievementsFromCanvas() {
+  const root = document.getElementById("achievementEntries");
+  if (!root) return;
+  const lines = Array.from(root.querySelectorAll(".split-line"))
+    .map((p) => p.textContent.replace(/^•\s*/, "").trim())
+    .filter(Boolean);
+  if (lines.length) achievements = lines;
+}
+function parsePassionsFromCanvas() {
+  const root = document.getElementById("passionEntries");
+  if (!root) return;
+  const lines = Array.from(root.querySelectorAll(".split-line"))
+    .map((p) => p.textContent.replace(/^•\s*/, "").trim())
+    .filter(Boolean);
+  if (lines.length) passions = lines;
+}
+function parseLanguagesFromCanvas() {
+  const root = document.getElementById("languageEntries");
+  if (!root) return;
+  const rows = Array.from(root.querySelectorAll(".split-lang-row")).map((row) => ({
+    name: row.querySelector(".split-lang-name")?.textContent?.trim() || "",
+    level: row.querySelector(".split-lang-level")?.textContent?.trim() || "",
+  }));
+  if (rows.length) languages = rows;
+}
+function renderExperienceCanvas() {
+  if (getLayoutVariant() === "gla-ats") return;
+  const root = document.getElementById("experienceEntries");
+  if (!root) return;
+  root.innerHTML = experiences
+    .map(
+      (exp) => `
+    <div class="r-entry">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div class="r-entry-title" contenteditable="true">${escapeHtml(exp.role)}</div>
+        <div class="r-entry-date" contenteditable="true">${escapeHtml(exp.dateRange)}</div>
+      </div>
+      <div class="r-entry-sub" contenteditable="true">${escapeHtml(exp.company)}</div>
+      <div class="r-entry-loc" contenteditable="true">${escapeHtml(exp.loc)}</div>
+      <ul class="r-bullets">${exp.bulletsText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => `<li class="r-bullet" contenteditable="true">${escapeHtml(line)}</li>`)
+        .join("")}</ul>
+    </div>`
+    )
+    .join("");
+}
+function renderEducationCanvas() {
+  const root = document.getElementById("educationEntries");
+  if (!root) return;
+  if (getLayoutVariant() === "gla-ats") {
+    root.innerHTML = educations
+      .map((ed) => {
+        const score = ed.score != null ? String(ed.score) : "";
+        const instLine = score ? `${escapeHtml(ed.institution || "")} | ${escapeHtml(score)}` : escapeHtml(ed.institution || "");
+        return `
+    <div class="r-entry">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div class="r-entry-title" contenteditable="true">${escapeHtml(ed.degree)}</div>
+        <div class="r-entry-date" contenteditable="true">${escapeHtml(ed.duration)}</div>
+      </div>
+      <div class="r-entry-sub" contenteditable="true">${instLine}</div>
+    </div>`;
+      })
+      .join("");
+    return;
+  }
+  root.innerHTML = educations
+    .map(
+      (ed) => `
+    <div class="r-entry">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div class="r-entry-title" contenteditable="true">${escapeHtml(ed.degree)}</div>
+        <div class="r-entry-date" contenteditable="true">${escapeHtml(ed.duration)}</div>
+      </div>
+      <div class="r-entry-sub" contenteditable="true">${escapeHtml(ed.institution)}</div>
+    </div>`
+    )
+    .join("");
+}
+function renderCertCanvas() {
+  const root = document.getElementById("certEntries");
+  if (!root) return;
+  root.innerHTML = certifications
+    .map((c) => `<li class="r-bullet" contenteditable="true">${escapeHtml(c.name)}</li>`)
+    .join("");
+}
+function renderFormExperienceList() {
+  const root = document.getElementById("formExperienceList");
+  if (!root) return;
+  const ex = getLayoutVariant() === "gla-ats" ? trainingExperiences : experiences;
+  const lbl = getLayoutVariant() === "gla-ats" ? "Training / internship" : "Job Title";
+  root.innerHTML = ex
+    .map(
+      (exp, i) => `
+    <div class="fp-card" data-exp-i="${i}">
+      <div class="fp-field"><div class="fp-label">${lbl}</div><input class="fp-input exp-inp" data-i="${i}" data-k="role" value="${escapeHtml(exp.role)}" /></div>
+      <div class="fp-row">
+        <div class="fp-field"><div class="fp-label">Dates</div><input class="fp-input exp-inp" data-i="${i}" data-k="dateRange" value="${escapeHtml(exp.dateRange)}" /></div>
+        <div class="fp-field"><div class="fp-label">Company</div><input class="fp-input exp-inp" data-i="${i}" data-k="company" value="${escapeHtml(exp.company)}" /></div>
+      </div>
+      <div class="fp-field"><div class="fp-label">Location</div><input class="fp-input exp-inp" data-i="${i}" data-k="loc" value="${escapeHtml(exp.loc)}" /></div>
+      <div class="fp-field"><div class="fp-label">Highlights (one per line)</div><textarea class="fp-text exp-inp" data-i="${i}" data-k="bulletsText">${escapeHtml(exp.bulletsText)}</textarea></div>
+      <button type="button" class="fp-remove" onclick="removeExperienceRow(${i})">Remove</button>
+    </div>`
+    )
+    .join("");
+}
+function renderFormEducationList() {
+  const root = document.getElementById("formEducationList");
+  if (!root) return;
+  root.innerHTML = educations
+    .map(
+      (ed, i) => `
+    <div class="fp-card" data-edu-i="${i}">
+      <div class="fp-field"><div class="fp-label">Degree</div><input class="fp-input edu-inp" data-i="${i}" data-k="degree" value="${escapeHtml(ed.degree)}" /></div>
+      <div class="fp-row">
+        <div class="fp-field"><div class="fp-label">Duration</div><input class="fp-input edu-inp" data-i="${i}" data-k="duration" value="${escapeHtml(ed.duration)}" /></div>
+        <div class="fp-field"><div class="fp-label">Institution</div><input class="fp-input edu-inp" data-i="${i}" data-k="institution" value="${escapeHtml(ed.institution)}" /></div>
+      </div>
+      <button type="button" class="fp-remove" onclick="removeEducationRow(${i})">Remove</button>
+    </div>`
+    )
+    .join("");
+}
+function renderFormCertList() {
+  const root = document.getElementById("formCertList");
+  if (!root) return;
+  root.innerHTML = certifications
+    .map(
+      (c, i) => `
+    <div class="fp-card" data-cert-i="${i}">
+      <div class="fp-field"><div class="fp-label">Certification</div><input class="fp-input cert-inp" data-i="${i}" data-k="name" value="${escapeHtml(c.name)}" /></div>
+      <button type="button" class="fp-remove" onclick="removeCertRow(${i})">Remove</button>
+    </div>`
+    )
+    .join("");
+}
+function scheduleRenderExperienceCanvas() {
+  clearTimeout(renderExpTimer);
+  renderExpTimer = setTimeout(() => {
+    renderExperienceCanvas();
+    scheduleSave();
+  }, 200);
+}
+function onExpInput(e) {
+  const t = e.target;
+  if (!t.classList.contains("exp-inp")) return;
+  const i = Number(t.dataset.i);
+  const k = t.dataset.k;
+  const arr = getLayoutVariant() === "gla-ats" ? trainingExperiences : experiences;
+  if (!arr[i] || !k) return;
+  arr[i][k] = t.value;
+  if (getLayoutVariant() === "gla-ats") renderTrainingCanvas();
+  else scheduleRenderExperienceCanvas();
+}
+function onEduInput(e) {
+  const t = e.target;
+  if (!t.classList.contains("edu-inp")) return;
+  const i = Number(t.dataset.i);
+  const k = t.dataset.k;
+  if (!educations[i] || !k) return;
+  educations[i][k] = t.value;
+  renderEducationCanvas();
+  scheduleSave();
+}
+function onCertInput(e) {
+  const t = e.target;
+  if (!t.classList.contains("cert-inp")) return;
+  const i = Number(t.dataset.i);
+  if (!certifications[i]) return;
+  certifications[i].name = t.value;
+  renderCertCanvas();
+  scheduleSave();
+}
+function addExperienceRow() {
+  const arr = getLayoutVariant() === "gla-ats" ? trainingExperiences : experiences;
+  arr.push({ role: "", dateRange: "", company: "", loc: "", bulletsText: "" });
+  renderFormExperienceList();
+  if (getLayoutVariant() === "gla-ats") renderTrainingCanvas();
+  else renderExperienceCanvas();
+  scheduleSave();
+}
+function removeExperienceRow(i) {
+  const arr = getLayoutVariant() === "gla-ats" ? trainingExperiences : experiences;
+  if (arr.length <= 1) return;
+  arr.splice(i, 1);
+  renderFormExperienceList();
+  if (getLayoutVariant() === "gla-ats") renderTrainingCanvas();
+  else renderExperienceCanvas();
+  scheduleSave();
+}
+function addEducationRow() {
+  educations.push({ degree: "", duration: "", institution: "", score: "" });
+  renderFormEducationList();
+  renderEducationCanvas();
+  scheduleSave();
+}
+function removeEducationRow(i) {
+  if (educations.length <= 1) return;
+  educations.splice(i, 1);
+  renderFormEducationList();
+  renderEducationCanvas();
+  scheduleSave();
+}
+function addCertRow() {
+  certifications.push({ name: "" });
+  renderFormCertList();
+  renderCertCanvas();
+  scheduleSave();
+}
+function removeCertRow(i) {
+  certifications.splice(i, 1);
+  if (!certifications.length) certifications.push({ name: "" });
+  renderFormCertList();
+  renderCertCanvas();
+  scheduleSave();
+}
+function parseExperienceFromCanvas() {
+  const nodes = document.querySelectorAll("#experienceEntries .r-entry");
+  if (!nodes.length || getLayoutVariant() === "gla-ats") return;
+  experiences = Array.from(nodes).map((node) => {
+    const bullets = Array.from(node.querySelectorAll(".r-bullet"))
+      .map((li) => li.textContent.trim())
+      .filter(Boolean)
+      .join("\n");
+    return {
+      role: node.querySelector(".r-entry-title")?.textContent?.trim() || "",
+      dateRange: node.querySelector(".r-entry-date")?.textContent?.trim() || "",
+      company: node.querySelector(".r-entry-sub")?.textContent?.trim() || "",
+      loc: node.querySelector(".r-entry-loc")?.textContent?.trim() || "",
+      bulletsText: bullets,
+    };
+  });
+}
+function parseEducationFromCanvas() {
+  const nodes = document.querySelectorAll("#educationEntries .r-entry");
+  if (!nodes.length) return;
+  if (getLayoutVariant() === "gla-ats") {
+    educations = Array.from(nodes).map((node) => {
+      const raw = node.querySelector(".r-entry-sub")?.textContent?.trim() || "";
+      const pi = raw.indexOf("|");
+      let institution = raw;
+      let score = "";
+      if (pi >= 0) {
+        institution = raw.slice(0, pi).trim();
+        score = raw.slice(pi + 1).trim();
+      }
+      return {
+        degree: node.querySelector(".r-entry-title")?.textContent?.trim() || "",
+        duration: node.querySelector(".r-entry-date")?.textContent?.trim() || "",
+        institution,
+        score,
+      };
+    });
+    return;
+  }
+  educations = Array.from(nodes).map((node) => ({
+    degree: node.querySelector(".r-entry-title")?.textContent?.trim() || "",
+    duration: node.querySelector(".r-entry-date")?.textContent?.trim() || "",
+    institution: node.querySelector(".r-entry-sub")?.textContent?.trim() || "",
+  }));
+}
+function parseCertsFromCanvas() {
+  const items = document.querySelectorAll("#certEntries .r-bullet");
+  if (!items.length) return;
+  certifications = Array.from(items).map((li) => ({ name: li.textContent.trim() }));
+}
+function renderAllFromData() {
+  const v = getLayoutVariant();
+  if (v === "gla-ats") {
+    renderEducationCanvas();
+    renderTrainingCanvas();
+    renderProjectCanvas();
+    renderGlaSkillsBody();
+    renderGlaBulletList("glaProfList", professionalAchievements);
+    renderGlaBulletList("glaActList", coCurricular);
+    const decl = document.querySelector(".gla-decl-text");
+    if (decl) decl.textContent = declarationText;
+    renderFormExperienceList();
+    renderFormEducationList();
+    renderFormCertList();
+    return;
+  }
+  renderExperienceCanvas();
+  renderEducationCanvas();
+  renderCertCanvas();
+  renderFormExperienceList();
+  renderFormEducationList();
+  renderFormCertList();
+  if (v === "split-teal") {
+    renderAchievementCanvas();
+    renderPassionCanvas();
+    renderLanguageCanvas();
+  }
+}
+let lastResumeRange = null;
+function captureResumeSelection() {
+  const paper = document.getElementById("resumePaper");
+  if (!paper) return;
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const r = sel.getRangeAt(0);
+  if (paper.contains(r.commonAncestorContainer)) lastResumeRange = r.cloneRange();
+}
+document.addEventListener("mouseup", (e) => {
+  if (e.target.closest("#resumePaper")) captureResumeSelection();
+});
+document.addEventListener("keyup", (e) => {
+  if (e.target.closest("#resumePaper")) captureResumeSelection();
+});
+document.getElementById("editorToolbar")?.addEventListener("mousedown", (e) => {
+  if (e.target.closest(".et-ai-btn")) captureResumeSelection();
+});
+function execCmd(cmd, val) {
+  const paper = document.getElementById("resumePaper");
+  if (paper) {
+    const sel = window.getSelection();
+    if (!sel.rangeCount || !paper.contains(sel.anchorNode)) {
+      const focusEl = paper.querySelector(".r-summary") || paper.querySelector("[contenteditable='true']");
+      focusEl?.focus();
+    }
+  }
+  document.execCommand(cmd, false, val ?? null);
+  scheduleSave();
+}
+function execFontSize(val) {
+  execCmd("fontSize", val);
+}
+function findBulletListNearSelection() {
+  const sel = window.getSelection();
+  if (sel.anchorNode) {
+    let node = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+    while (node && node !== document.getElementById("resumePaper")) {
+      if (node.classList?.contains("r-bullets")) return node;
+      node = node.parentElement;
+    }
+  }
+  return (
+    document.querySelector("#experienceEntries .r-bullets") ||
+    document.querySelector("#trainingEntries .r-bullets") ||
+    document.querySelector("#projectEntries .r-bullets") ||
+    document.querySelector("#resumePaper ul.r-bullets")
+  );
+}
+function addBulletFromToolbar() {
+  const ul = findBulletListNearSelection();
+  if (!ul) {
+    showToast("Add an experience section first, or click inside a bullet list.", "info");
+    return;
+  }
+  const li = document.createElement("li");
+  li.className = "r-bullet";
+  li.contentEditable = "true";
+  li.textContent = "New achievement with measurable impact...";
+  ul.appendChild(li);
+  li.focus();
+  const r = document.createRange();
+  r.selectNodeContents(li);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(r);
+  if (getLayoutVariant() === "gla-ats") {
+    parseTrainingFromCanvas();
+    parseProjectFromCanvas();
+  } else {
+    parseExperienceFromCanvas();
+  }
+  renderFormExperienceList();
+  scheduleSave();
+}
+function addEntryFromToolbar() {
+  addExperienceRow();
+  const step = document.querySelector('.step-item[data-form="experience"]');
+  if (step)
+    scrollToSection(getLayoutVariant() === "gla-ats" ? "#glaTraining" : "#rExperience", step);
+  showToast(getLayoutVariant() === "gla-ats" ? "New training entry added" : "New experience entry added", "success");
+}
+async function aiEnhanceSelected() {
+  const btn = document.getElementById("etAiBtn");
+  const sel = window.getSelection();
+  let range = null;
+  if (sel.rangeCount && sel.toString().trim() && document.getElementById("resumePaper")?.contains(sel.anchorNode)) {
+    range = sel.getRangeAt(0).cloneRange();
+  } else if (lastResumeRange && lastResumeRange.toString().trim()) {
+    range = lastResumeRange.cloneRange();
+  }
+  if (!range || !range.toString().trim()) {
+    showToast("Select text in the resume preview first.", "info");
+    return;
+  }
+  const text = range.toString().trim();
+  if (btn) btn.disabled = true;
+  try {
+    const data = await apiRequest("/api/ai/suggest", {
+      method: "POST",
+      body: JSON.stringify({ section: "Resume content", context: text }),
+    });
+    const suggestion = (data.suggestion || "").trim();
+    if (!suggestion) throw new Error("Empty suggestion from AI");
+    range.deleteContents();
+    const tn = document.createTextNode(suggestion);
+    range.insertNode(tn);
+    range.setStartAfter(tn);
+    range.collapse(true);
+    const newSel = window.getSelection();
+    newSel.removeAllRanges();
+    newSel.addRange(range);
+    lastResumeRange = range.cloneRange();
+    scheduleSave();
+    syncFormFromCanvas();
+    showToast("AI suggestion applied", "success");
+  } catch (e) {
+    showToast(e.message || "AI unavailable — set GEMINI_API_KEY on the server.", "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+function updateFormPanelToggleUI(){
+  const main=document.getElementById('mainEditor');
+  const btn=document.getElementById('fpEdgeToggle');
+  if(!main||!btn)return;
+  const collapsed=main.classList.contains('form-collapsed');
+  btn.innerHTML=collapsed?'&#187;':'&#171;';
+  btn.title=collapsed?'Show form panel':'Hide form panel';
+  btn.setAttribute('aria-expanded', collapsed?'false':'true');
+}
+function toggleFormPanel(){
+  const main=document.getElementById('mainEditor');
+  if(!main)return;
+  main.classList.toggle('form-collapsed');
+  updateFormPanelToggleUI();
+  try{localStorage.setItem('liveEditorFormCollapsed',main.classList.contains('form-collapsed')?'1':'0');}catch(e){}
+}
+function setView(view,btn){
+  document.querySelectorAll('.tb-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  const shell=document.querySelector('.editor-shell');const tb=document.querySelector('.editor-toolbar');
+  if(view==='preview'){if(shell)shell.style.display='none';tb.style.display='none';document.querySelectorAll('[contenteditable]').forEach(el=>el.setAttribute('contenteditable','false'));}
+  else{if(shell)shell.style.display='';tb.style.display='';document.querySelectorAll('[contenteditable="false"]').forEach(el=>{if(el.tagName!=='INPUT')el.setAttribute('contenteditable','true');});}
+}
+function scrollToSection(selector, el){
+  const node = document.querySelector(selector);
+  if (node) node.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelectorAll(".step-item").forEach((s) => s.classList.remove("active"));
+  if (el) {
+    el.classList.add("active");
+    showStepForm(el.getAttribute("data-form"));
+  }
+}
+function showStepForm(formId){
+  document.querySelectorAll(".step-form").forEach((f) => f.classList.remove("active"));
+  const node = document.getElementById("form-" + formId);
+  if (node) node.classList.add("active");
+  const titles = {
+    header: ["Let's start with your header", "Include contact details."],
+    experience: ["Add your experience", "Highlight achievements and impact."],
+    education: ["Add your education", "Include degree and institution."],
+    certifications: ["Add certifications", "Relevant credentials boost trust."],
+    skills: ["Add your skills", "Use job-matching keywords."],
+    summary: ["Write your summary", "Keep it concise and measurable."],
+    finalize: ["Finalize your resume", "Review and save your resume."]
+  };
+  const [titleText, subText] = titles[formId] || ["Edit details", "Update this section."];
+  const title = document.getElementById("formTitle");
+  const sub = document.getElementById("formSub");
+  if (title) title.textContent = titleText;
+  if (sub) sub.textContent = subText;
+  syncFormFromCanvas();
+}
+function allSteps(){return Array.from(document.querySelectorAll(".step-item"));}
+function activeStepIndex(){return allSteps().findIndex((s)=>s.classList.contains("active"));}
+function activateStep(index){
+  const steps = allSteps();
+  if (!steps.length) return;
+  const clamped = Math.max(0, Math.min(steps.length - 1, index));
+  const step = steps[clamped];
+  if (!step) return;
+  const formId = step.getAttribute("data-form");
+  let target = "#rHeader";
+  if (getLayoutVariant() === "gla-ats") {
+    const gm = {
+      header: "#rHeader",
+      experience: "#glaTraining",
+      education: "#rEducation",
+      certifications: "#glaSkills",
+      skills: "#glaSkills",
+      summary: "#rSummary",
+      finalize: "#rFinalize",
+    };
+    target = gm[formId] || "#rHeader";
+  } else {
+    const map = {
+      header: "#rHeader",
+      experience: "#rExperience",
+      education: "#rEducation",
+      certifications: "#rCerts",
+      skills: "#rSkills",
+      summary: "#rSummary",
+      finalize: "#rFinalize",
+    };
+    target = map[formId] || "#rHeader";
+  }
+  scrollToSection(target, step);
+}
+function nextStep(){activateStep(activeStepIndex()+1);}
+function prevStep(){activateStep(activeStepIndex()-1);}
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  document.getElementById('toastText').textContent=msg;
+  document.getElementById('toastIcon').textContent=type==='error'?'⚠':type==='info'?'ℹ':'✓';
+  t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+function normalizeSectionWrappers() {
+  const ensureWrapper = (sectionId, wrapperId) => {
+    const sec = document.getElementById(sectionId);
+    if (!sec) return null;
+    let wrap = document.getElementById(wrapperId);
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.id = wrapperId;
+      const title = sec.querySelector(".r-section-title");
+      if (title && title.nextSibling) sec.insertBefore(wrap, title.nextSibling);
+      else sec.appendChild(wrap);
+    }
+    [...sec.children].forEach((el) => {
+      if (el.classList?.contains("r-entry")) wrap.appendChild(el);
+    });
+    return wrap;
+  };
+  ensureWrapper("rExperience", "experienceEntries");
+  ensureWrapper("rEducation", "educationEntries");
+  const certSec = document.getElementById("rCerts");
+  if (certSec) {
+    let ul = document.getElementById("certEntries");
+    if (!ul) {
+      ul = document.createElement("ul");
+      ul.className = "r-bullets";
+      ul.id = "certEntries";
+      certSec.appendChild(ul);
+    } else {
+      const orphan = certSec.querySelector("ul.r-bullets:not(#certEntries)");
+      if (orphan) {
+        while (orphan.firstChild) ul.appendChild(orphan.firstChild);
+        orphan.remove();
+      }
+    }
+  }
+}
+function syncFormFromCanvas(){
+  const setVal = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  };
+  if (getLayoutVariant() === "gla-ats") {
+    const name = document.querySelector(".gla-header .rh-name, .gla-name")?.textContent?.trim() || "";
+    const summary = document.querySelector("#rSummary .r-summary")?.textContent?.trim() || "";
+    setVal("qName", name);
+    setVal("qTitle", "");
+    setVal("qEmail", document.querySelector(".gla-em")?.textContent?.trim() || "");
+    setVal("qPhone", document.querySelector(".gla-phone")?.textContent?.trim() || "");
+    setVal("qLinkedin", document.querySelector(".gla-li")?.textContent?.trim() || "");
+    setVal("qSummary", summary);
+    parseEducationFromCanvas();
+    parseGlaStateFromCanvas();
+    renderFormExperienceList();
+    renderFormEducationList();
+    renderFormCertList();
+    return;
+  }
+  const name = document.querySelector(".rh-name")?.textContent?.trim() || "";
+  const title = document.querySelector(".rh-title")?.textContent?.trim() || "";
+  const contactItems = document.querySelectorAll(".rh-contact-item span:last-child");
+  const email = contactItems[0]?.textContent?.trim() || "";
+  const phone = contactItems[1]?.textContent?.trim() || "";
+  const linkedin = contactItems[2]?.textContent?.trim() || "";
+  const summary = document.querySelector(".r-summary")?.textContent?.trim() || "";
+  setVal("qName", name);
+  setVal("qTitle", title);
+  setVal("qEmail", email);
+  setVal("qPhone", phone);
+  setVal("qLinkedin", linkedin);
+  setVal("qSummary", summary);
+  parseExperienceFromCanvas();
+  parseEducationFromCanvas();
+  parseCertsFromCanvas();
+  if (getLayoutVariant() === "split-teal") {
+    parseAchievementsFromCanvas();
+    parsePassionsFromCanvas();
+    parseLanguagesFromCanvas();
+  }
+  renderFormExperienceList();
+  renderFormEducationList();
+  renderFormCertList();
+  const skills = Array.from(document.querySelectorAll("#rSkills .skill-tag")).map((s) => s.textContent.trim()).filter(Boolean).join(", ");
+  setVal("qSkills", skills);
+}
+function applyHeaderSummarySkills(){
+  const setText = (selector, value) => {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  };
+  const getVal = (id) => document.getElementById(id)?.value?.trim() || "";
+  if (getLayoutVariant() === "gla-ats") {
+    setText(".gla-header .rh-name, .gla-name", getVal("qName") || "Your Name");
+    const em = document.querySelector(".gla-em");
+    if (em) em.textContent = getVal("qEmail");
+    const ph = document.querySelector(".gla-phone");
+    if (ph) ph.textContent = getVal("qPhone");
+    const li = document.querySelector(".gla-li");
+    if (li) li.textContent = getVal("qLinkedin");
+    const sum = document.querySelector("#rSummary .r-summary");
+    if (sum) sum.textContent = getVal("qSummary");
+    scheduleSave();
+    return;
+  }
+  setText(".rh-name", getVal("qName") || "Your Name");
+  setText(".rh-title", getVal("qTitle") || "Job Title");
+  const contactItems = document.querySelectorAll(".rh-contact-item span:last-child");
+  if (contactItems[0]) contactItems[0].textContent = getVal("qEmail");
+  if (contactItems[1]) contactItems[1].textContent = getVal("qPhone");
+  if (contactItems[2]) contactItems[2].textContent = getVal("qLinkedin");
+  setText(".r-summary", getVal("qSummary"));
+  const skillsRoot = document.querySelector("#rSkills");
+  const skills = getVal("qSkills").split(",").map((s) => s.trim()).filter(Boolean);
+  if (skillsRoot && skills.length) {
+    const skillHeading = document.querySelector("#rSkills .r-section-title")?.textContent?.trim() || "Technical Skills";
+    skillsRoot.innerHTML = "<div class='r-section-title' style='font-size:10px' contenteditable='true'>" + escapeHtml(skillHeading) + "</div><div>" + skills.map((s) => "<span class='skill-tag' contenteditable='true'>" + escapeHtml(s) + "</span>").join(" ") + "</div>";
+  }
+  scheduleSave();
+}
+function setSaving(state){
+  const el = document.getElementById("saveState");
+  if (!el) return;
+  if (state) el.innerHTML = '<div style="width:5px;height:5px;border-radius:50%;background:#f59e0b;display:inline-block;margin-right:4px"></div><span>Saving...</span>';
+  else el.innerHTML = '<div class="saved-dot"></div><span>Auto-saved</span>';
+}
+function collectPayload(){
+  const paper = document.getElementById("resumePaper");
+  const title = (document.getElementById("docName").value || "Resume").trim();
+  const accent = getComputedStyle(document.documentElement).getPropertyValue("--resume-accent").trim() || "#1e3a5f";
+  const wiz = window.__liveWizardMeta || { field: "tech", layout: "live-editor", photo: "no" };
+  const layoutVariant = getLayoutVariant();
+  const templateId =
+    layoutVariant === "split-teal"
+      ? "live-editor-split"
+      : layoutVariant === "gla-ats"
+        ? "gla-resume"
+        : "live-editor";
+  const content = {
+    templateId,
+    liveEditor: true,
+    layoutVariant,
+    splitMeta: { achievements, passions, languages },
+    accentColor: accent,
+    wizard: { ...wiz, accentColor: accent, templateId },
+    rawHtml: paper.innerHTML,
+  };
+  if (layoutVariant === "gla-ats") {
+    content.glaMeta = {
+      training: trainingExperiences,
+      projects: projectEntries,
+      skills: { ...glaSkills },
+      professionalAchievements,
+      coCurricular,
+      declaration: declarationText,
+    };
+  }
+  return { title, content };
+}
+async function apiRequest(path, options = {}){
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) { window.location.href = "/auth"; throw new Error("No auth token"); }
+  const headers = { "Content-Type": "application/json", Authorization: "Bearer " + token, ...(options.headers || {}) };
+  const res = await fetch(path, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+async function saveResume(){
+  if (saveInFlight) return;
+  saveInFlight = true;
+  setSaving(true);
+  try {
+    const payload = collectPayload();
+    if (resumeId) {
+      await apiRequest("/api/resumes/" + encodeURIComponent(resumeId), { method: "PATCH", body: JSON.stringify(payload) });
+    } else {
+      const data = await apiRequest("/api/resumes", { method: "POST", body: JSON.stringify(payload) });
+      resumeId = data.resume?._id || null;
+      if (resumeId) {
+        const u = new URL(window.location.href);
+        u.searchParams.set("mode", "edit");
+        u.searchParams.set("resumeId", resumeId);
+        u.searchParams.set("skipWizard", "1");
+        window.history.replaceState({}, "", u.toString());
+      }
+    }
+    setSaving(false);
+  } catch (err) {
+    setSaving(false);
+    showToast(err.message || "Save failed", "error");
+  } finally {
+    saveInFlight = false;
+  }
+}
+function manualSave(){ saveResume().then(()=>showToast("Resume saved!", "success")); }
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  setSaving(true);
+  saveTimer = setTimeout(() => { saveResume(); }, 1200);
+}
+async function loadResume(){
+  if (!resumeId) {
+    try {
+      const raw = sessionStorage.getItem("letsresume_wizard_context");
+      if (raw) {
+        const ctx = JSON.parse(raw);
+        const split = ctx.layoutVariant === "split-teal";
+        const gla = ctx.layoutVariant === "gla-ats";
+        window.__liveWizardMeta = {
+          field: ctx.field || "tech",
+          photo: ctx.photo || "no",
+          layout: split ? "live-editor-split" : gla ? "gla-resume" : "live-editor",
+        };
+        if (ctx.accentColor) document.documentElement.style.setProperty("--resume-accent", ctx.accentColor);
+        applyLiveFieldProfile(ctx.field || "tech");
+        if (split) applyResumeLayoutTemplate("split-teal", true);
+        else if (gla) {
+          trainingExperiences = JSON.parse(JSON.stringify(experiences));
+          applyResumeLayoutTemplate("gla-ats", true);
+        }
+        sessionStorage.removeItem("letsresume_wizard_context");
+        return;
+      }
+    } catch (e) {}
+    window.__liveWizardMeta = { field: "tech", layout: "live-editor", photo: "no" };
+    renderAllFromData();
+    syncFormFromCanvas();
+    return;
+  }
+  try {
+    const data = await apiRequest("/api/resumes/" + encodeURIComponent(resumeId));
+    const resume = data.resume || {};
+    document.getElementById("docName").value = resume.title || "Resume";
+    const content = resume.content || {};
+    const w = content.wizard || {};
+    const isSplit =
+      content.templateId === "live-editor-split" ||
+      content.layoutVariant === "split-teal" ||
+      (content.rawHtml && content.rawHtml.includes("split-shell"));
+    const isGla =
+      content.templateId === "gla-resume" ||
+      content.layoutVariant === "gla-ats" ||
+      (content.rawHtml && content.rawHtml.includes("gla-shell"));
+    window.__liveWizardMeta = {
+      field: w.field || "tech",
+      photo: w.photo || "no",
+      layout: isGla ? "gla-resume" : isSplit ? "live-editor-split" : "live-editor",
+    };
+    if (content.glaMeta && typeof content.glaMeta === "object") {
+      const gm = content.glaMeta;
+      if (Array.isArray(gm.training)) trainingExperiences = gm.training;
+      if (Array.isArray(gm.projects)) projectEntries = gm.projects;
+      if (gm.skills && typeof gm.skills === "object") glaSkills = { ...glaSkills, ...gm.skills };
+      if (Array.isArray(gm.professionalAchievements)) professionalAchievements = gm.professionalAchievements;
+      if (Array.isArray(gm.coCurricular)) coCurricular = gm.coCurricular;
+      if (typeof gm.declaration === "string") declarationText = gm.declaration;
+    }
+    if (content.rawHtml) document.getElementById("resumePaper").innerHTML = content.rawHtml;
+    const paperEl = document.getElementById("resumePaper");
+    if (paperEl) {
+      paperEl.classList.remove("split-teal", "gla-ats");
+      if (isSplit) {
+        paperEl.classList.add("split-teal");
+        window.__liveLayoutVariant = "split-teal";
+        setLayoutVariant("split-teal");
+      } else if (isGla) {
+        paperEl.classList.add("gla-ats");
+        window.__liveLayoutVariant = "gla-ats";
+        setLayoutVariant("gla-ats");
+      } else {
+        window.__liveLayoutVariant = "classic";
+        setLayoutVariant("classic");
+      }
+    }
+    if (content.accentColor) document.documentElement.style.setProperty("--resume-accent", content.accentColor);
+    normalizeSectionWrappers();
+    if (paperEl && paperEl.querySelector(".split-shell")) {
+      parseAchievementsFromCanvas();
+      parsePassionsFromCanvas();
+      parseLanguagesFromCanvas();
+      if (content.splitMeta && typeof content.splitMeta === "object") {
+        if (!achievements.length && Array.isArray(content.splitMeta.achievements)) achievements = content.splitMeta.achievements;
+        if (!passions.length && Array.isArray(content.splitMeta.passions)) passions = content.splitMeta.passions;
+        if (!languages.length && Array.isArray(content.splitMeta.languages)) languages = content.splitMeta.languages;
+      }
+      renderAchievementCanvas();
+      renderPassionCanvas();
+      renderLanguageCanvas();
+    }
+    if (isGla) {
+      renderAllFromData();
+    } else if (!document.querySelector("#experienceEntries .r-entry")) {
+      renderAllFromData();
+    }
+    syncFormFromCanvas();
+  } catch (err) {
+    showToast(err.message || "Unable to load resume", "error");
+  }
+}
+document.addEventListener("input", (e) => {
+  const target = e.target;
+  if (target && (target.closest("#resumePaper") || target.id === "docName")) {
+    scheduleSave();
+    syncFormFromCanvas();
+  }
+});
+document.getElementById("formPanel").addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.classList.contains("exp-inp")) {
+    onExpInput(e);
+    return;
+  }
+  if (t.classList.contains("edu-inp")) {
+    onEduInput(e);
+    return;
+  }
+  if (t.classList.contains("cert-inp")) {
+    onCertInput(e);
+    return;
+  }
+  if (["qName", "qTitle", "qEmail", "qPhone", "qLinkedin", "qSummary", "qSkills"].includes(t.id)) {
+    applyHeaderSummarySkills();
+  }
+});
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault();manualSave();}if((e.metaKey||e.ctrlKey)&&e.key==='p'){e.preventDefault();window.print();}});
+try{if(localStorage.getItem('liveEditorFormCollapsed')==='1'){document.getElementById('mainEditor')?.classList.add('form-collapsed');updateFormPanelToggleUI();}}catch(e){}
+loadResume();
+</script>
+</body>
+</html>
