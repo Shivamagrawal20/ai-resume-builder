@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as resumeService from "../services/resume.service.js";
 
+
 export const list = asyncHandler(async (req, res) => {
   const items = await resumeService.listResumes(req.user._id);
   res.json({ resumes: items });
