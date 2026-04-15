@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as authService from "../services/auth.service.js";
 
+
 export const register = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
   const result = await authService.registerUser({ email, password, name });
