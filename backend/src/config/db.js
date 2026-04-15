@@ -5,3 +5,5 @@ export async function connectDb() {
   mongoose.set("strictQuery", true);
   await mongoose.connect(env.mongodbUri);
 }
+
+
