@@ -4,6 +4,7 @@ export async function listResumes(userId) {
   return Resume.find({ userId }).sort({ updatedAt: -1 }).lean();
 }
 
+
 export async function getResume(userId, resumeId) {
   const resume = await Resume.findOne({ _id: resumeId, userId }).lean();
   if (!resume) {
