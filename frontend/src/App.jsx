@@ -4,6 +4,7 @@ import { api, getToken, setToken } from "./api.js";
 
 function LandingPage({ user }) {
   const [activeBuilderTab, setActiveBuilderTab] = useState("Personal");
+  const [navOpen, setNavOpen] = useState(false);
   const marqueeItems = [
     "MERN Stack",
     "AI Resume Builder",
@@ -18,6 +19,10 @@ function LandingPage({ user }) {
     "PDF Export",
     "NLP",
   ];
+
+  useEffect(() => {
+    document.title = "LetsResume — AI Resume Builder & ATS Checker";
+  }, []);
 
   useEffect(() => {
     const cursor = document.querySelector(".cursor");
@@ -86,14 +91,29 @@ function LandingPage({ user }) {
         <div className="nav-logo">
           Lets<span>Resume</span>
         </div>
-        <ul className="nav-links">
-          <li><a href="#how">How it works</a></li>
-          <li><a href="#features">Features</a></li>
-          <li><a href="#builder">Builder</a></li>
-          <li><a href="#pricing">Pricing</a></li>
+        <button
+          type="button"
+          className="nav-menu-toggle"
+          aria-expanded={navOpen}
+          aria-controls="nav-links"
+          aria-label={navOpen ? "Close menu" : "Open menu"}
+          onClick={() => setNavOpen((o) => !o)}
+        >
+          Menu
+        </button>
+        <ul className={`nav-links${navOpen ? " nav-open" : ""}`} id="nav-links">
+          <li><a href="#how" onClick={() => setNavOpen(false)}>How it works</a></li>
+          <li><a href="#features" onClick={() => setNavOpen(false)}>Features</a></li>
+          <li><a href="#builder" onClick={() => setNavOpen(false)}>Builder</a></li>
+          <li><a href="#pricing" onClick={() => setNavOpen(false)}>Pricing</a></li>
+          <li><a href="/docs.html" onClick={() => setNavOpen(false)}>Documentation</a></li>
         </ul>
         <Link className="nav-cta" to={user ? "/app" : "/auth"}>Start for free →</Link>
       </header>
+      {navOpen && (
+        <button type="button" className="nav-menu-scrim" aria-label="Close menu" onClick={() => setNavOpen(false)} />
+      )}
+      <main id="main-content">
       <section id="hero">
         <div className="hero-bg">
           <div className="hero-grid" />
@@ -104,7 +124,9 @@ function LandingPage({ user }) {
         <div className="hero-content">
           <div className="hero-badge">AI-Powered · ATS-Optimized · MERN Stack</div>
           <h1 className="hero-h1">Your resume,<br /><em>reimagined</em> by<br /><span className="strike">guesswork</span> AI</h1>
-          <p className="hero-sub">LetsResume uses cutting-edge AI to transform your raw experience into polished, ATS-beating resumes.</p>
+          <p className="hero-sub">
+            LetsResume uses cutting-edge AI to transform your raw experience into polished, ATS-beating resumes. Create your resume online, run our ATS checker, and apply with confidence.
+          </p>
           <div className="hero-actions">
             <Link className="btn-primary" to={user ? "/app" : "/auth"}>Build my resume <span>→</span></Link>
             <a className="btn-secondary" href="#how">See how it works</a>
@@ -159,14 +181,74 @@ function LandingPage({ user }) {
       </section>
       <section id="stats" style={{ padding: 0 }}><div className="stats-grid"><div className="stat-item reveal"><div className="stat-num" data-count="50000">0</div><div className="stat-label">Resumes Built</div></div><div className="stat-item reveal reveal-delay-1"><div className="stat-num" data-count="87">0</div><div className="stat-label">Avg ATS Score</div></div><div className="stat-item reveal reveal-delay-2"><div className="stat-num" data-count="3">0</div><div className="stat-label">x More Interviews</div></div><div className="stat-item reveal reveal-delay-3"><div className="stat-num" data-count="5">0</div><div className="stat-label">Minute Setup Time</div></div></div></section>
       <section id="testimonials"><div style={{ textAlign: "center" }}><div className="reveal"><span className="section-label">Reviews</span></div><div className="reveal reveal-delay-1"><h2 className="section-title">What job seekers say</h2></div></div><div className="testi-grid"><div className="testi-card reveal reveal-delay-1"><div className="testi-stars">★★★★★</div><div className="testi-text">I got more interviews after optimizing with AI suggestions.</div></div><div className="testi-card reveal reveal-delay-2"><div className="testi-stars">★★★★★</div><div className="testi-text">Best resume workflow I have used this year.</div></div><div className="testi-card reveal reveal-delay-3"><div className="testi-stars">★★★★★</div><div className="testi-text">Fast, polished, and great for role-specific versions.</div></div></div></section>
-      <section id="pricing"><div style={{ textAlign: "center" }}><div className="reveal"><span className="section-label">Pricing</span></div><div className="reveal reveal-delay-1"><h2 className="section-title">Simple, honest pricing</h2></div></div><div className="pricing-grid"><div className="price-card reveal reveal-delay-1"><div className="price-plan">Free</div><div className="price-amount">₹0</div><div className="price-period">Forever free</div><ul className="price-features"><li>1 resume</li><li>3 AI generations / month</li></ul></div><div className="price-card featured reveal reveal-delay-2"><div className="price-badge">Most Popular</div><div className="price-plan">Pro</div><div className="price-amount">₹299</div><div className="price-period">per month</div><ul className="price-features"><li>Unlimited resumes</li><li>Unlimited AI generations</li></ul></div><div className="price-card reveal reveal-delay-3"><div className="price-plan">Team</div><div className="price-amount">₹799</div><div className="price-period">per month</div><ul className="price-features"><li>Everything in Pro</li><li>Shared template library</li></ul></div></div></section>
+      <section id="pricing">
+        <div style={{ textAlign: "center" }}>
+          <div className="reveal"><span className="section-label">Pricing</span></div>
+          <div className="reveal reveal-delay-1"><h2 className="section-title">Simple, honest pricing</h2></div>
+        </div>
+        <div className="pricing-grid">
+          <div className="price-card reveal reveal-delay-1">
+            <div className="price-plan">Free</div>
+            <div className="price-amount">₹0</div>
+            <div className="price-period">Forever free</div>
+            <ul className="price-features">
+              <li>Up to 10 resumes</li>
+              <li>15 AI generations / month</li>
+              <li>PDF download with watermark</li>
+              <li>ATS score checker</li>
+            </ul>
+          </div>
+          <div className="price-card featured reveal reveal-delay-2">
+            <div className="price-badge">Most Popular</div>
+            <div className="price-plan">Pro</div>
+            <div className="price-amount">₹105</div>
+            <div className="price-period">per month</div>
+            <ul className="price-features">
+              <li>Up to 40 resumes</li>
+              <li>50 AI generations / month</li>
+              <li>Clean PDF export (no watermark)</li>
+              <li>Everything in Free</li>
+            </ul>
+          </div>
+          <div className="price-card reveal reveal-delay-3">
+            <div className="price-plan">Team</div>
+            <div className="price-amount">₹799</div>
+            <div className="price-period">per month</div>
+            <ul className="price-features">
+              <li>Unlimited resumes</li>
+              <li>Unlimited AI generations</li>
+              <li>Shared template library</li>
+              <li>Priority support</li>
+              <li>Multiple seats (coming soon)</li>
+            </ul>
+          </div>
+        </div>
+      </section>
       <section id="cta"><div className="cta-bg-text">LetsResume</div><div className="cta-content reveal"><h2 className="cta-title">Ready to land your<br /><em>dream job?</em></h2><p className="cta-sub">Join 50,000+ job seekers who write better resumes with AI.</p><div className="cta-form"><input className="cta-input" type="email" placeholder="Enter your email address" /><Link className="btn-cta" to={user ? "/app" : "/auth"}>Start free →</Link></div><p className="cta-note">No credit card required · Free plan available · Setup in 60 seconds</p></div></section>
-      <footer><div className="footer-grid"><div><div className="footer-brand">Lets<span style={{ color: "var(--accent)" }}>Resume</span></div><p className="footer-desc">AI-powered resume builder built on the MERN stack.</p></div><div><div className="footer-col-title">Product</div><ul className="footer-links"><li><a href="#how">How it works</a></li><li><a href="#features">Features</a></li><li><a href="#builder">Builder</a></li></ul></div><div><div className="footer-col-title">Resources</div><ul className="footer-links"><li><a href="#pricing">Pricing</a></li><li><a href="/auth">Support</a></li></ul></div><div><div className="footer-col-title">Company</div><ul className="footer-links"><li><a href="/auth">About</a></li><li><a href="/auth">Contact</a></li></ul></div></div><div className="footer-bottom"><span>© 2025 LetsResume</span><span>Built with <span className="footer-accent">♥</span></span></div></footer>
+      </main>
+      <footer><div className="footer-grid"><div><div className="footer-brand">Lets<span style={{ color: "var(--accent)" }}>Resume</span></div><p className="footer-desc">AI-powered resume builder and ATS checker — MERN stack app at letsresume.netlify.app.</p></div><div><div className="footer-col-title">Product</div><ul className="footer-links"><li><a href="#how">How it works</a></li><li><a href="#features">Features</a></li><li><a href="#builder">Builder</a></li></ul></div><div><div className="footer-col-title">Resources</div><ul className="footer-links"><li><a href="/docs.html">Documentation</a></li><li><a href="#pricing">Pricing</a></li><li><a href="/auth">Support</a></li></ul></div><div><div className="footer-col-title">Company</div><ul className="footer-links"><li><a href="/auth">About</a></li><li><a href="/auth">Contact</a></li></ul></div></div><div className="footer-bottom">
+          <span>
+            © 2026 @letsresume by{" "}
+            <a href="https://learnershut.com" target="_blank" rel="noopener noreferrer">learnershut.com</a>
+            {" "}
+            — made by Shivam Agrawal
+          </span>
+          <span>
+            Built with <span className="footer-accent">♥</span> by{" "}
+            <a href="https://github.com/Shivamagrawal20" target="_blank" rel="noopener noreferrer">Shivam Agrawal</a>
+          </span>
+        </div></footer>
     </div>
   );
 }
 
+const PASSWORD_MAX_LENGTH = 10;
+
 function AuthPage({ onAuthSuccess, user }) {
+  useEffect(() => {
+    document.title = "Sign in | LetsResume — Resume Builder & ATS Checker";
+  }, []);
+
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -221,13 +303,14 @@ function AuthPage({ onAuthSuccess, user }) {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
           </div>
           <div className="field">
-            <label>Password (min 8)</label>
+            <label>{tab === "register" ? "Password (8–10 characters)" : "Password"}</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={8}
+              minLength={tab === "register" ? 8 : undefined}
+              maxLength={PASSWORD_MAX_LENGTH}
               autoComplete={tab === "register" ? "new-password" : "current-password"}
             />
           </div>
@@ -243,10 +326,17 @@ function AuthPage({ onAuthSuccess, user }) {
 
 function BuilderPage({ user, onLogout }) {
   const navigate = useNavigate();
-  if (!user) return <Navigate to="/auth" replace />;
+
   useEffect(() => {
-    window.location.href = "/dashboard.html";
+    document.title = "Dashboard | LetsResume";
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    window.location.href = "/dashboard.html";
+  }, [user]);
+
+  if (!user) return <Navigate to="/auth" replace />;
   return (
     <main className="builder-page">
       <p className="muted">Opening dashboard...</p>

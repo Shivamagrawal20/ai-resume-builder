@@ -6,11 +6,14 @@ import { validate } from "../middleware/validate.middleware.js";
 
 const router = Router();
 
+/** Align with UI; bcrypt also effectively caps at 72 bytes for hashing. */
+const PASSWORD_MAX_LENGTH = 10;
+
 router.post(
   "/register",
   [
     body("email").isEmail().normalizeEmail(),
-    body("password").isLength({ min: 8 }),
+    body("password").isLength({ min: 8, max: PASSWORD_MAX_LENGTH }),
     body("name").optional().trim(),
   ],
   validate,
@@ -19,7 +22,10 @@ router.post(
 
 router.post(
   "/login",
-  [body("email").isEmail().normalizeEmail(), body("password").notEmpty()],
+  [
+    body("email").isEmail().normalizeEmail(),
+    body("password").isLength({ min: 1, max: PASSWORD_MAX_LENGTH }),
+  ],
   validate,
   authController.login
 );

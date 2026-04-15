@@ -56,6 +56,24 @@ function setDemoResumes(resumes) {
   localStorage.setItem(DEMO_RESUMES_KEY, JSON.stringify(resumes));
 }
 
+const DEMO_AI_KEY = "arb_demo_ai";
+
+function getDemoAiMonthState() {
+  const month = new Date().toISOString().slice(0, 7);
+  try {
+    const raw = localStorage.getItem(DEMO_AI_KEY);
+    const o = raw ? JSON.parse(raw) : { month, count: 0 };
+    if (o.month !== month) return { month, count: 0 };
+    return o;
+  } catch {
+    return { month, count: 0 };
+  }
+}
+
+function setDemoAiMonthState(o) {
+  localStorage.setItem(DEMO_AI_KEY, JSON.stringify(o));
+}
+
 function demoDelay() {
   return new Promise((resolve) => setTimeout(resolve, 120));
 }
@@ -96,7 +114,16 @@ const demoApi = {
     await demoDelay();
     const user = getDemoUser();
     if (!user) throw new Error("Session expired");
-    return { user };
+    const resumes = getDemoResumes();
+    const ai = getDemoAiMonthState();
+    return {
+      user: { ...user, plan: "free" },
+      usage: {
+        resumes: { count: resumes.length, max: 10 },
+        aiThisMonth: { count: ai.count, max: 15 },
+      },
+      features: { watermarkPdf: true, sharedTemplateLibrary: false },
+    };
   },
   async listResumes() {
     await demoDelay();
@@ -111,6 +138,9 @@ const demoApi = {
   async createResume(body) {
     await demoDelay();
     const resumes = getDemoResumes();
+    if (resumes.length >= 10) {
+      throw new Error("Resume limit reached (10 on free plan). Upgrade or delete a resume.");
+    }
     const resume = {
       _id: crypto.randomUUID(),
       title: body.title || "My resume",
@@ -143,6 +173,12 @@ const demoApi = {
   },
   async aiSuggest(body) {
     await demoDelay();
+    const ai = getDemoAiMonthState();
+    if (ai.count >= 15) {
+      throw new Error("Monthly AI limit reached (15 on free plan). Upgrade or wait until next month.");
+    }
+    ai.count += 1;
+    setDemoAiMonthState(ai);
     const section = body?.section || "Section";
     return {
       suggestion: `Demo suggestion for ${section}: Quantified impact, used action verbs, and aligned to target role keywords.`,

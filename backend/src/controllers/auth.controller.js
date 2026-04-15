@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as authService from "../services/auth.service.js";
+import * as usage from "../services/usage.service.js";
 
 
 export const register = asyncHandler(async (req, res) => {
@@ -15,5 +16,6 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const me = asyncHandler(async (req, res) => {
-  res.json({ user: authService.toPublicUser(req.user) });
+  const payload = await usage.buildMePayload(req.user);
+  res.json(payload);
 });

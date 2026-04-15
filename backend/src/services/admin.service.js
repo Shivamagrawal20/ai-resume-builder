@@ -19,6 +19,7 @@ export async function getUsersWithResumeCounts() {
         id: { $toString: "$_id" },
         email: 1,
         name: 1,
+        plan: 1,
         createdAt: 1,
         resumeCount: { $size: "$_resumes" },
       },

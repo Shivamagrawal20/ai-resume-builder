@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>LetsResume — Live Resume Editor</title>
+<meta name="description" content="LetsResume live resume editor — edit your CV in the page, AI enhance, ATS-ready templates, PDF export at letsresume.netlify.app."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://letsresume.netlify.app/template-editor-live.html"/>
+<meta property="og:title" content="Live Resume Editor | LetsResume"/>
+<meta property="og:url" content="https://letsresume.netlify.app/template-editor-live.html"/>
+<title>Live Resume Editor | LetsResume — Online CV Editor</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -16,15 +21,104 @@ body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var
 .tb-saved{font-size:11px;color:rgba(255,255,255,0.3);display:flex;align-items:center;gap:4px}.saved-dot{width:5px;height:5px;background:#22c55e;border-radius:50%}
 .tb-center{display:flex;gap:4px}.tb-tab{padding:6px 14px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,0.4)}.tb-tab.active,.tb-tab:hover{background:rgba(255,255,255,0.08);color:#fff}
 .tb-right{display:flex;align-items:center;gap:10px}.tb-btn{padding:7px 16px;border-radius:100px;font-family:'Bricolage Grotesque',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:none}.tb-btn.ghost{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1)}.tb-btn.primary{background:#c8f135;color:#111}
-.main{flex:1;display:flex;overflow:hidden;min-height:0}
-.editor-shell{position:relative;flex-shrink:0;display:flex;flex-direction:row;align-items:stretch;width:920px;min-height:0;transition:width .35s cubic-bezier(0.4,0,0.2,1);overflow:hidden}
+.main{flex:1;display:flex;overflow:hidden;min-height:0;position:relative}
+/* Laptop / desktop: classic three-pane editor (unchanged behavior) */
+.editor-shell{
+  position:relative;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:row;
+  align-items:stretch;
+  width:920px;
+  min-height:0;
+  transition:width .35s cubic-bezier(0.4,0,0.2,1);
+  overflow:hidden;
+}
 .main.form-collapsed .editor-shell{width:280px}
-.left-panel{width:280px;flex-shrink:0;background:#050512;border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;position:relative;z-index:4;box-shadow:4px 0 20px rgba(0,0,0,0.25)}
-.fp-edge-toggle{position:absolute;right:-14px;top:50%;transform:translateY(-50%);z-index:5;width:28px;height:56px;border:none;border-radius:0 10px 10px 0;background:#c8f135;color:#111;font-size:14px;font-weight:800;cursor:pointer;box-shadow:2px 0 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;transition:background .2s}
+.editor-sidebar-backdrop{display:none}
+.editor-sidebar-topbar{display:none}
+.sidebar-fab{display:none}
+.editor-sidebar-inner{display:contents}
+.editor-sidebar-body{display:contents}
+.fp-edge-toggle{
+  position:absolute;
+  right:-14px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  width:28px;
+  height:56px;
+  border:none;
+  border-radius:0 10px 10px 0;
+  background:#c8f135;
+  color:#111;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:2px 0 8px rgba(0,0,0,0.2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Bricolage Grotesque',sans-serif;
+  transition:background .2s;
+}
 .fp-edge-toggle:hover{background:#b5da2a}
 .main.form-collapsed .fp-edge-toggle{border-radius:10px 0 0 10px;right:auto;left:100%;margin-left:-14px;box-shadow:-2px 0 8px rgba(0,0,0,0.2)}
-.form-panel{width:640px;flex-shrink:0;background:#f3f4f6;border-right:1px solid #d9dbe0;display:flex;flex-direction:column;position:absolute;left:280px;top:0;bottom:0;z-index:1;transition:transform .35s cubic-bezier(0.4,0,0.2,1);box-shadow:6px 0 24px rgba(0,0,0,0.06)}
+.left-panel{width:280px;flex-shrink:0;background:#050512;border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;position:relative;z-index:4;box-shadow:4px 0 20px rgba(0,0,0,0.25)}
+.form-panel{
+  width:640px;
+  flex-shrink:0;
+  background:#f3f4f6;
+  border-right:1px solid #d9dbe0;
+  display:flex;
+  flex-direction:column;
+  position:absolute;
+  left:280px;
+  top:0;
+  bottom:0;
+  z-index:1;
+  transition:transform .35s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:6px 0 24px rgba(0,0,0,0.06);
+}
 .main.form-collapsed .form-panel{transform:translateX(-640px)}
+.canvas-zoom-inner{
+  --zoom:1;
+  position:relative;
+  transform:scale(var(--zoom));
+  transform-origin:top center;
+  transition:transform .12s ease;
+}
+.wm-layer{display:none!important;pointer-events:none}
+@media print{
+  /* Watermark must stack above the white resume page (was hidden underneath). */
+  body.wm-print .canvas-zoom-inner{position:relative;min-height:0;height:auto}
+  body.wm-print .wm-layer.on{
+    display:block!important;
+    position:absolute;
+    left:0;top:0;right:0;bottom:0;
+    z-index:100;
+    overflow:visible;
+    pointer-events:none;
+  }
+  body.wm-print .wm-layer.on::before{
+    content:"LetsResume · Free plan";
+    position:absolute;
+    top:40%;
+    left:50%;
+    transform:translate(-50%,-50%) rotate(-28deg);
+    font-size:clamp(40px,10vw,96px);
+    font-weight:800;
+    color:rgba(15,23,42,0.22);
+    font-family:system-ui,-apple-system,sans-serif;
+    letter-spacing:0.06em;
+    white-space:nowrap;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  body.wm-print .resume-paper{position:relative;z-index:0}
+}
+.zoom-group{align-items:center;gap:4px}
+.zoom-label{font-size:11px;font-weight:700;color:var(--ink2);min-width:38px;text-align:center}
 .lp-header{padding:24px 22px 10px}
 .lp-logo{color:#fff;font-size:18px;font-weight:700;line-height:1.1}
 .lp-logo span{color:#c8f135}
@@ -79,7 +173,9 @@ body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var
 .et-wide{padding:5px 10px!important;width:auto!important;font-size:11px!important;font-weight:600}
 .et-ai-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;font-family:'Bricolage Grotesque',sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;transition:opacity .2s,transform .2s;white-space:nowrap}
 .et-ai-btn:hover{opacity:.92;transform:translateY(-1px)}.et-ai-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.canvas-wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:24px 20px}.resume-paper{width:794px;min-height:1122px;background:#fff;box-shadow:0 4px 40px rgba(0,0,0,0.12);font-family:'Source Serif 4',Georgia,serif}
+.canvas-wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:24px 20px;-webkit-overflow-scrolling:touch}.resume-paper{width:794px;min-height:1122px;background:#fff;box-shadow:0 4px 40px rgba(0,0,0,0.12);font-family:'Source Serif 4',Georgia,serif}
+/* Split + GLA: height follows content — no fake “full page” gap under short resumes */
+.resume-paper.split-teal,.resume-paper.gla-ats{min-height:auto}
 .resume-accent-bar{height:6px;background:var(--resume-accent,#1e3a5f)}
 .resume-header{padding:32px 48px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-start}.rh-left{flex:1}
 .rh-name{font-family:'Bricolage Grotesque',sans-serif;font-size:30px;font-weight:800;color:#0f172a;margin-bottom:4px;outline:none}.rh-title{font-size:15px;color:var(--resume-accent,#1e3a5f);font-weight:600;margin-bottom:12px;outline:none}
@@ -94,7 +190,7 @@ body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var
 /* Split teal sidebar template (live editor only) */
 .resume-paper.split-teal{background:#fff;font-family:'Source Serif 4',Georgia,serif;--split-teal:#0f7669;--split-teal-dark:#0d5f56}
 .resume-paper.split-teal .resume-accent-bar{display:none}
-.resume-paper.split-teal .split-shell{display:flex;min-height:1040px;width:100%}
+.resume-paper.split-teal .split-shell{display:flex;min-height:auto;width:100%;align-items:stretch}
 .resume-paper.split-teal .split-side{width:280px;flex-shrink:0;background:var(--split-teal);color:#fff;padding:28px 22px;display:flex;flex-direction:column;gap:22px;font-family:'Bricolage Grotesque',sans-serif}
 .resume-paper.split-teal .split-side-name{font-size:22px;font-weight:800;letter-spacing:.02em;line-height:1.2;outline:none;margin-bottom:4px}
 .resume-paper.split-teal .split-sec-h{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.85;margin-bottom:8px}
@@ -135,7 +231,208 @@ body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var
 .resume-paper.gla-ats .gla-skills-body .gla-skill-p{font-size:11px;line-height:1.55;margin:4px 0;color:#1e293b}
 .resume-paper.gla-ats .gla-skills-body strong{color:#0f172a;font-weight:700}
 .resume-paper.gla-ats .gla-decl-text{font-size:11px;line-height:1.6;color:#334155;font-style:italic}
-@media print{.topbar,.left-panel,.form-panel,.fp-edge-toggle,.editor-toolbar{display:none!important}.main{display:block}.canvas-wrap{padding:0!important}.resume-paper{box-shadow:none!important;width:100%!important}}
+@media print{
+  /* One PDF page height follows content — no forced A4 min-height or flex viewport stretching. */
+  /* Replace editor cream (--bg) with white so PDF has no beige strip on the side or below. */
+  @page{ size:auto; margin:10mm; background:#fff; }
+  html,body{
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+    background:#fff!important;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  body{display:block!important;}
+  .main,.editor-area,.canvas-wrap,.canvas-zoom-inner{background:#fff!important}
+  .topbar,.left-panel,.form-panel,.editor-shell,.sidebar-fab,.editor-toolbar,.fp-edge-toggle{display:none!important}
+  .main{
+    display:block!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .editor-area{
+    display:block!important;
+    flex:none!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .canvas-wrap{
+    display:block!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+    padding:0!important;
+  }
+  .canvas-zoom-inner{
+    transform:none!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    width:100%!important;
+  }
+  .resume-paper{
+    box-shadow:none!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+  }
+  .resume-paper.split-teal .split-shell{
+    min-height:0!important;
+    height:auto!important;
+  }
+}
+@media (max-width:1024px){
+  body{height:auto;min-height:100vh;overflow:auto}
+  /* Mobile only: full-screen form overlay + Edit FAB (laptop layout unchanged above) */
+  .editor-sidebar-inner{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;background:#eef0f4;box-shadow:none}
+  .editor-sidebar-body{display:flex;flex:1;min-height:0;overflow:hidden;flex-direction:column}
+  .editor-sidebar-backdrop{display:block;position:absolute;inset:0;background:rgba(5,5,18,0.52);backdrop-filter:blur(3px);pointer-events:auto;z-index:0}
+  .editor-sidebar-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 16px;
+    background:#fff;
+    border-bottom:1px solid #d9dbe0;
+    flex-shrink:0;
+    position:relative;
+    z-index:1;
+  }
+  .editor-sidebar-title{font-size:15px;font-weight:700;color:#111827;letter-spacing:-0.02em}
+  .editor-sidebar-close{
+    width:40px;height:40px;border-radius:10px;border:1px solid #d1d5db;
+    background:#fff;color:#374151;font-size:20px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-family:inherit;
+  }
+  .editor-sidebar-close:hover{background:#f9fafb}
+  .fp-edge-toggle{display:none!important}
+  .main.form-collapsed .editor-shell{width:100%!important}
+  .main.form-collapsed .form-panel{transform:none!important}
+  .editor-shell{
+    position:fixed;
+    top:52px;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%!important;
+    z-index:100;
+    display:none;
+    flex-direction:column;
+    pointer-events:none;
+    transition:none;
+    overflow:visible;
+  }
+  .main.sidebar-open .editor-shell{display:flex;pointer-events:auto}
+  .editor-sidebar-inner{position:relative;z-index:1;flex:1;min-height:0}
+  .sidebar-fab{
+    display:block;
+    position:fixed;
+    left:8px;
+    top:calc(52px + (100vh - 52px) / 2);
+    transform:translateY(-50%);
+    z-index:90;
+    padding:10px 14px;
+    border-radius:999px;
+    border:none;
+    background:#1e1e2e;
+    color:#fff;
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 10px 32px rgba(0,0,0,0.28);
+  }
+  .sidebar-fab:hover{background:#2d2d44}
+  .main.sidebar-open .sidebar-fab{display:none}
+  .left-panel{width:100%;max-height:min(240px,32vh);flex-shrink:0;border-right:none;border-bottom:1px solid rgba(255,255,255,0.08);overflow-y:auto}
+  .form-panel{
+    position:relative!important;
+    left:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    width:100%!important;
+    flex:1;
+    min-width:0;
+    min-height:min(52vh,560px);
+    overflow:auto;
+    border-right:none;
+    transform:none!important;
+    box-shadow:none;
+  }
+  .editor-area{min-height:min(50vh,560px);flex:1}
+  .canvas-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:16px 12px}
+  .resume-paper{width:min(794px,calc(100vw - 24px))!important;max-width:794px}
+  .topbar{flex-wrap:wrap;height:auto;min-height:52px;padding:10px 12px;gap:8px}
+  .tb-left{flex:1 1 auto;min-width:0;flex-wrap:wrap}
+  .tb-center{flex:1 1 100%;justify-content:center;order:4}
+  .tb-right{flex-wrap:wrap;justify-content:flex-end}
+  .tb-file{min-width:0}
+  .tb-file input{width:min(260px,100%)}
+}
+@media (max-width:520px){
+  .tb-tab{padding:6px 10px;font-size:11px}
+  .tb-btn{padding:7px 12px;font-size:11px}
+  .fp-row{grid-template-columns:1fr}
+  .editor-toolbar{padding:8px 10px;gap:6px}
+  .et-ai-btn{margin-left:0;width:100%;justify-content:center}
+}
+/* Privacy blur (deterrent — browsers cannot reliably detect OS screenshots) */
+.privacy-shield-overlay{
+  position:fixed;
+  inset:0;
+  z-index:2147483646;
+  background:rgba(248,250,252,0.92);
+  backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .22s ease,visibility .22s;
+}
+.privacy-shield-overlay.on{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+.privacy-shield-overlay .privacy-shield-hint{
+  position:absolute;
+  bottom:28px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:12px;
+  color:#475569;
+  background:rgba(255,255,255,0.95);
+  padding:10px 18px;
+  border-radius:999px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.1);
+  font-family:'Bricolage Grotesque',sans-serif;
+  max-width:calc(100vw - 32px);
+  text-align:center;
+}
+@media print{
+  .privacy-shield-overlay{display:none!important}
+}
+/* Block selection everywhere except resume + native fields (double-click / drag) */
+body{
+  -webkit-user-select:none;
+  user-select:none;
+}
+#resumePaper,#resumePaper [contenteditable]{
+  -webkit-user-select:text!important;
+  user-select:text!important;
+}
+input,textarea,select{
+  -webkit-user-select:text!important;
+  user-select:text!important;
+}
 </style>
 </head>
 <body>
@@ -146,10 +443,21 @@ body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var
     <div class="tb-saved" id="saveState"><div class="saved-dot"></div><span>Auto-saved</span></div>
   </div>
   <div class="tb-center"><button class="tb-tab active" onclick="setView('edit',this)">Edit</button><button class="tb-tab" onclick="setView('preview',this)">Preview</button></div>
-  <div class="tb-right"><button class="tb-btn ghost" onclick="window.print()">↓ PDF</button><button class="tb-btn primary" onclick="manualSave()">Save</button><a class="tb-btn ghost" href="/dashboard.html" style="text-decoration:none">Dashboard</a></div>
+  <div class="tb-right"><button type="button" class="tb-btn ghost" id="privacyShieldBtn" onclick="togglePrivacyShield()" title="Blur screen (privacy)">Blur</button><button class="tb-btn ghost" onclick="window.print()">↓ PDF</button><button class="tb-btn primary" onclick="manualSave()">Save</button><a class="tb-btn ghost" href="/dashboard.html" style="text-decoration:none">Dashboard</a></div>
+</div>
+<div id="privacyShield" class="privacy-shield-overlay" aria-hidden="true" role="dialog" aria-label="Privacy blur active">
+  <div class="privacy-shield-hint">Click anywhere or press Esc to dismiss · Many OS screenshot shortcuts never reach the browser; we blur when we can (PrtScn, Win+Shift+S in some browsers, etc.)</div>
 </div>
 <div class="main" id="mainEditor">
-  <div class="editor-shell">
+  <button type="button" class="sidebar-fab" id="sidebarFab" onclick="openEditorSidebar()">Edit</button>
+  <div class="editor-shell" id="editorShell" aria-hidden="true">
+    <div class="editor-sidebar-backdrop" onclick="closeEditorSidebar()" aria-hidden="true"></div>
+    <div class="editor-sidebar-inner">
+      <div class="editor-sidebar-topbar">
+        <span class="editor-sidebar-title">Edit your resume</span>
+        <button type="button" class="editor-sidebar-close" onclick="closeEditorSidebar()" aria-label="Close editor">✕</button>
+      </div>
+      <div class="editor-sidebar-body">
   <div class="left-panel" id="leftPanel">
     <button type="button" class="fp-edge-toggle" id="fpEdgeToggle" onclick="toggleFormPanel()" title="Hide form panel" aria-expanded="true" aria-controls="formPanel">&#171;</button>
     <div class="lp-header"><div class="lp-logo">Lets<span>Resume</span></div></div>
@@ -211,6 +519,8 @@ body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var
       </div>
     </div>
   </div>
+      </div>
+    </div>
   </div>
   <div class="editor-area">
     <div class="editor-toolbar" id="editorToolbar">
@@ -245,9 +555,16 @@ body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var
         <button type="button" class="et-btn et-wide" onclick="addEntryFromToolbar()" title="Add experience entry">+ Entry</button>
         <button type="button" class="et-btn et-wide" onclick="addBulletFromToolbar()" title="Add bullet">+ Bullet</button>
       </div>
+      <div class="et-sep"></div>
+      <div class="et-group zoom-group">
+        <button type="button" class="et-btn" onclick="adjustCanvasZoom(-0.1)" title="Zoom out">−</button>
+        <span class="zoom-label" id="zoomLabel">100%</span>
+        <button type="button" class="et-btn" onclick="adjustCanvasZoom(0.1)" title="Zoom in">+</button>
+        <button type="button" class="et-btn et-wide" onclick="resetCanvasZoom()" title="Reset zoom">Reset</button>
+      </div>
       <button type="button" class="et-ai-btn" id="etAiBtn" onclick="aiEnhanceSelected()" title="Improve selected text with AI">&#10022; AI Enhance Selected</button>
     </div>
-    <div class="canvas-wrap"><div class="resume-paper" id="resumePaper"><div class="resume-accent-bar" id="accentBar"></div>
+    <div class="canvas-wrap" id="canvasWrap"><div class="canvas-zoom-inner" id="canvasZoomInner"><div class="wm-layer" id="wmLayer" aria-hidden="true"></div><div class="resume-paper" id="resumePaper"><div class="resume-accent-bar" id="accentBar"></div>
       <div class="resume-header" id="rHeader"><div class="rh-left"><div class="rh-name" contenteditable="true">Shivam Agrawal</div><div class="rh-title" contenteditable="true">Full Stack Developer · MERN Stack</div><div class="rh-contact"><div class="rh-contact-item"><span>✉</span><span contenteditable="true">shivam.agrawal@email.com</span></div><div class="rh-contact-item"><span>📞</span><span contenteditable="true">+91 97535 43210</span></div><div class="rh-contact-item"><span>🔗</span><span contenteditable="true">linkedin.com/in/shivam</span></div></div></div></div>
       <div class="resume-body"><div class="resume-main">
         <div class="r-section" id="rSummary"><div class="r-section-title" contenteditable="true">Professional Summary</div><div class="r-summary" contenteditable="true">Results-driven Full Stack Developer with 2+ years of hands-on experience architecting scalable MERN stack applications.</div></div>
@@ -256,7 +573,7 @@ body{font-family:'Bricolage Grotesque',sans-serif;background:var(--bg);color:var
         <div class="r-section" id="rCerts"><div class="r-section-title" contenteditable="true">Certifications</div><ul class="r-bullets" id="certEntries"></ul></div>
         <div class="r-section" id="rFinalize"><div class="r-section-title">Finalize</div><div class="r-summary">Review all sections, run ATS score, then save and export PDF.</div></div>
       </div><div class="resume-aside"><div class="r-section" id="rSkills"><div class="r-section-title" style="font-size:10px" contenteditable="true">Technical Skills</div><div><span class="skill-tag" contenteditable="true">React.js</span> <span class="skill-tag" contenteditable="true">Node.js</span> <span class="skill-tag" contenteditable="true">MongoDB</span></div></div></div></div>
-    </div></div>
+    </div></div></div>
   </div>
 </div>
 <div class="toast" id="toast"><span id="toastIcon">✓</span><span id="toastText">Saved!</span></div>
@@ -1096,27 +1413,78 @@ async function aiEnhanceSelected() {
     if (btn) btn.disabled = false;
   }
 }
+function isLiveEditorMobile(){
+  return typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 1024px)').matches;
+}
+let canvasZoom = 1;
+function applyCanvasZoom(){
+  const el = document.getElementById('canvasZoomInner');
+  if (el) el.style.setProperty('--zoom', String(canvasZoom));
+  const z = document.getElementById('zoomLabel');
+  if (z) z.textContent = Math.round(canvasZoom * 100) + '%';
+}
+function adjustCanvasZoom(delta){
+  canvasZoom = Math.min(1.85, Math.max(0.4, Math.round((canvasZoom + delta) * 100) / 100));
+  applyCanvasZoom();
+}
+function resetCanvasZoom(){
+  canvasZoom = 1;
+  applyCanvasZoom();
+}
 function updateFormPanelToggleUI(){
-  const main=document.getElementById('mainEditor');
-  const btn=document.getElementById('fpEdgeToggle');
-  if(!main||!btn)return;
-  const collapsed=main.classList.contains('form-collapsed');
-  btn.innerHTML=collapsed?'&#187;':'&#171;';
-  btn.title=collapsed?'Show form panel':'Hide form panel';
-  btn.setAttribute('aria-expanded', collapsed?'false':'true');
+  const main = document.getElementById('mainEditor');
+  const btn = document.getElementById('fpEdgeToggle');
+  if (!main || !btn || isLiveEditorMobile()) return;
+  const collapsed = main.classList.contains('form-collapsed');
+  btn.innerHTML = collapsed ? '&#187;' : '&#171;';
+  btn.title = collapsed ? 'Show form panel' : 'Hide form panel';
+  btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
 }
 function toggleFormPanel(){
-  const main=document.getElementById('mainEditor');
-  if(!main)return;
+  const main = document.getElementById('mainEditor');
+  if (!main) return;
+  if (isLiveEditorMobile()) return;
   main.classList.toggle('form-collapsed');
   updateFormPanelToggleUI();
-  try{localStorage.setItem('liveEditorFormCollapsed',main.classList.contains('form-collapsed')?'1':'0');}catch(e){}
+  try { localStorage.setItem('liveEditorFormCollapsed', main.classList.contains('form-collapsed') ? '1' : '0'); } catch (e) {}
+}
+function openEditorSidebar(){
+  if (!isLiveEditorMobile()) return;
+  const main = document.getElementById('mainEditor');
+  const shell = document.getElementById('editorShell');
+  if (!main || !shell) return;
+  main.classList.remove('sidebar-collapsed');
+  main.classList.add('sidebar-open');
+  shell.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  try { localStorage.setItem('liveEditorSidebarOpen', '1'); } catch (e) {}
+}
+function closeEditorSidebar(){
+  if (!isLiveEditorMobile()) return;
+  const main = document.getElementById('mainEditor');
+  const shell = document.getElementById('editorShell');
+  if (!main || !shell) return;
+  main.classList.add('sidebar-collapsed');
+  main.classList.remove('sidebar-open');
+  shell.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  try { localStorage.setItem('liveEditorSidebarOpen', '0'); } catch (e) {}
 }
 function setView(view,btn){
   document.querySelectorAll('.tb-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
-  const shell=document.querySelector('.editor-shell');const tb=document.querySelector('.editor-toolbar');
-  if(view==='preview'){if(shell)shell.style.display='none';tb.style.display='none';document.querySelectorAll('[contenteditable]').forEach(el=>el.setAttribute('contenteditable','false'));}
-  else{if(shell)shell.style.display='';tb.style.display='';document.querySelectorAll('[contenteditable="false"]').forEach(el=>{if(el.tagName!=='INPUT')el.setAttribute('contenteditable','true');});}
+  const shell=document.getElementById('editorShell');const tb=document.getElementById('editorToolbar');const fab=document.getElementById('sidebarFab');
+  if(view==='preview'){
+    if(shell)shell.style.display='none';
+    if(tb)tb.style.display='none';
+    if(fab)fab.style.display='none';
+    if(isLiveEditorMobile())closeEditorSidebar();
+    document.querySelectorAll('[contenteditable]').forEach(el=>el.setAttribute('contenteditable','false'));
+  } else {
+    if(shell)shell.style.display='';
+    if(tb)tb.style.display='';
+    if(fab)fab.style.display=isLiveEditorMobile()?'':'none';
+    document.querySelectorAll('[contenteditable="false"]').forEach(el=>{if(el.tagName!=='INPUT')el.setAttribute('contenteditable','true');});
+  }
 }
 function scrollToSection(selector, el){
   const node = document.querySelector(selector);
@@ -1513,9 +1881,165 @@ document.getElementById("formPanel").addEventListener("input", (e) => {
     applyHeaderSummarySkills();
   }
 });
-document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault();manualSave();}if((e.metaKey||e.ctrlKey)&&e.key==='p'){e.preventDefault();window.print();}});
-try{if(localStorage.getItem('liveEditorFormCollapsed')==='1'){document.getElementById('mainEditor')?.classList.add('form-collapsed');updateFormPanelToggleUI();}}catch(e){}
-loadResume();
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault();manualSave();}
+  if((e.metaKey||e.ctrlKey)&&e.key==='p'){e.preventDefault();window.print();}
+  if(e.key==='Escape'&&isLiveEditorMobile()&&document.getElementById('mainEditor')?.classList.contains('sidebar-open')){e.preventDefault();closeEditorSidebar();}
+});
+(function initLiveEditorLayout(){
+  const main=document.getElementById('mainEditor');
+  const shell=document.getElementById('editorShell');
+  if(!main)return;
+  try{
+    if(isLiveEditorMobile()){
+      main.classList.remove('form-collapsed');
+      if(localStorage.getItem('liveEditorSidebarOpen')==='1'){
+        openEditorSidebar();
+      }else{
+        main.classList.add('sidebar-collapsed');
+        if(shell)shell.setAttribute('aria-hidden','true');
+      }
+    }else{
+      main.classList.remove('sidebar-collapsed','sidebar-open');
+      if(shell)shell.setAttribute('aria-hidden','false');
+      if(localStorage.getItem('liveEditorFormCollapsed')==='1')main.classList.add('form-collapsed');
+      updateFormPanelToggleUI();
+    }
+  }catch(e){}
+})();
+window.addEventListener('resize',function(){
+  const main=document.getElementById('mainEditor');
+  if(!main)return;
+  if(isLiveEditorMobile()){
+    main.classList.remove('form-collapsed');
+    try{
+      if(localStorage.getItem('liveEditorSidebarOpen')==='1'){
+        main.classList.add('sidebar-open');
+        main.classList.remove('sidebar-collapsed');
+        document.body.style.overflow='hidden';
+      }else{
+        main.classList.remove('sidebar-open');
+        main.classList.add('sidebar-collapsed');
+        document.body.style.overflow='';
+      }
+    }catch(e){}
+    const shell=document.getElementById('editorShell');
+    if(shell)shell.style.display='';
+    const fab=document.getElementById('sidebarFab');
+    if(fab)fab.style.display='';
+  }else{
+    main.classList.remove('sidebar-collapsed','sidebar-open');
+    document.body.style.overflow='';
+    try{
+      if(localStorage.getItem('liveEditorFormCollapsed')==='1')main.classList.add('form-collapsed');
+      else main.classList.remove('form-collapsed');
+    }catch(e){}
+    const shell=document.getElementById('editorShell');
+    if(shell)shell.style.display='';
+    const fab=document.getElementById('sidebarFab');
+    if(fab)fab.style.display='none';
+    updateFormPanelToggleUI();
+  }
+});
+applyCanvasZoom();
+(function(){
+  function setPrivacyShield(on){
+    var el=document.getElementById("privacyShield");
+    if(!el)return;
+    if(on){ el.classList.add("on"); el.setAttribute("aria-hidden","false"); }
+    else { el.classList.remove("on"); el.setAttribute("aria-hidden","true"); }
+  }
+  window.togglePrivacyShield=function(){
+    var el=document.getElementById("privacyShield");
+    setPrivacyShield(!el||!el.classList.contains("on"));
+  };
+  var ps=document.getElementById("privacyShield");
+  if(ps) ps.addEventListener("click",function(){ setPrivacyShield(false); });
+  function shouldBlurForScreenshotKeys(e){
+    if(e.key==="Escape")return false;
+    if(e.key==="PrintScreen"||e.code==="PrintScreen")return true;
+    if(e.code==="F13")return true;
+    if(e.altKey&&(e.key==="PrintScreen"||e.code==="PrintScreen"))return true;
+    var meta=e.metaKey||e.ctrlKey;
+    if(meta&&e.shiftKey){
+      var k=e.key;
+      if(k==="3"||k==="4"||k==="5")return true;
+      if(k==="#"||k==="$"||k==="%")return true;
+    }
+    if(e.shiftKey&&e.metaKey&&!e.ctrlKey&&(e.key==="s"||e.key==="S"))return true;
+    return false;
+  }
+  function onPrivacyKey(e){
+    if(e.key==="Escape"){ setPrivacyShield(false); return; }
+    if(!shouldBlurForScreenshotKeys(e))return;
+    e.preventDefault();
+    setPrivacyShield(true);
+  }
+  document.addEventListener("keydown",onPrivacyKey,true);
+  document.addEventListener("keyup",function(e){
+    if(e.key==="PrintScreen"||e.code==="PrintScreen"){
+      e.preventDefault();
+      setPrivacyShield(true);
+    }
+  },true);
+  function allowLiveSelect(t){
+    if(!t||!t.closest)return false;
+    if(t.closest("#resumePaper"))return true;
+    var tag=(t.tagName||"").toUpperCase();
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return true;
+    return false;
+  }
+  function stopLiveChromeDbl(e){
+    if(allowLiveSelect(e.target))return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+  function clearSel(){ try{ var s=window.getSelection(); if(s)s.removeAllRanges(); }catch(x){} }
+  document.addEventListener("selectstart",function(e){
+    var t=e.target;
+    if(!t||!t.closest)return;
+    if(allowLiveSelect(t))return;
+    e.preventDefault();
+  }, true);
+  document.addEventListener("mousedown",function(e){ if(e.detail===2) stopLiveChromeDbl(e); }, true);
+  document.addEventListener("dblclick",function(e){ stopLiveChromeDbl(e); }, true);
+  document.addEventListener("click",function(e){ if(e.detail===2) stopLiveChromeDbl(e); }, true);
+  document.addEventListener("mouseup",function(e){
+    if(e.detail!==2)return;
+    if(allowLiveSelect(e.target))return;
+    clearSel();
+  }, true);
+})();
+async function fetchAccountForPrint(){
+  var wm=document.getElementById("wmLayer");
+  /* Default: show watermark until API says paid plan (free tier). */
+  window.__watermarkPdf=true;
+  if(wm) wm.classList.add("on");
+  try{
+    const data=await apiRequest("/api/auth/me");
+    window.__planUsage=data;
+    var needWm=!!(data.features&&data.features.watermarkPdf);
+    window.__watermarkPdf=needWm;
+    if(wm){
+      if(needWm) wm.classList.add("on");
+      else wm.classList.remove("on");
+    }
+  }catch(_e){
+    window.__watermarkPdf=true;
+    if(wm) wm.classList.add("on");
+  }
+}
+window.addEventListener("beforeprint",function(){
+  /* undefined treated as watermark on (safe default for free). */
+  if(window.__watermarkPdf!==false) document.body.classList.add("wm-print");
+});
+window.addEventListener("afterprint",function(){
+  document.body.classList.remove("wm-print");
+});
+(async function(){
+  await fetchAccountForPrint();
+  await loadResume();
+})();
 </script>
 </body>
 </html>

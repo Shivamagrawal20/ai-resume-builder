@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="description" content="LetsResume documentation — how to use the dashboard, resume editors, ATS checker, templates, and more."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://letsresume.netlify.app/docs.html"/>
+<title>Documentation | LetsResume — User Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0b10;--surface:#13131a;--surface2:#1a1a22;--border:rgba(255,255,255,0.08);
+  --ink:#f4f3ff;--muted:rgba(244,243,255,0.55);--muted2:rgba(244,243,255,0.72);
+  --accent:#c8f135;--accent2:#7c3aed;--blue:#3b82f6;--green:#22c55e;--amber:#f59e0b;
+  --r:12px;--sidebar:280px;--top:56px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--ink);line-height:1.65;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.docs-layout{display:flex;min-height:100vh}
+.docs-sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--border);
+  padding:20px 0 32px;overflow-y:auto;z-index:20;
+}
+.docs-brand{display:flex;align-items:center;gap:10px;padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.docs-logo{width:40px;height:40px;border-radius:10px;background:var(--accent);color:#111;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.docs-brand-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--ink)}
+.docs-nav{padding:0 12px}
+.docs-nav h2{font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:12px 8px 6px}
+.docs-nav a{display:block;padding:8px 10px;border-radius:8px;color:var(--muted2);font-size:14px;font-weight:500;text-decoration:none}
+.docs-nav a:hover,.docs-nav a.active{background:rgba(255,255,255,0.06);color:var(--ink);text-decoration:none}
+.docs-main{margin-left:var(--sidebar);flex:1;min-width:0;padding:0 32px 80px;max-width:900px}
+.docs-topbar{
+  position:sticky;top:0;z-index:10;background:rgba(11,11,16,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:14px 0;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap
+}
+.docs-topbar h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.docs-top-actions{display:flex;gap:10px;flex-wrap:wrap}
+.docs-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--border);background:var(--surface2);color:var(--ink);text-decoration:none;font-family:inherit;cursor:pointer}
+.docs-btn:hover{background:rgba(255,255,255,0.08);text-decoration:none}
+.docs-btn.primary{background:var(--accent);color:#111;border-color:transparent}
+.docs-btn.primary:hover{filter:brightness(1.05)}
+.doc-section{padding-bottom:40px;scroll-margin-top:calc(var(--top) + 16px)}
+.doc-section h2{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;margin-bottom:14px;letter-spacing:-0.3px;color:var(--ink)}
+.doc-section h3{font-size:17px;font-weight:600;margin:22px 0 10px;color:var(--ink)}
+.doc-section p{margin-bottom:12px;color:var(--muted2);font-size:15px}
+.doc-section ul,.doc-section ol{margin:10px 0 14px 1.25rem;color:var(--muted2);font-size:15px}
+.doc-section li{margin-bottom:6px}
+.doc-callout{border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;background:rgba(200,241,53,0.06);margin:16px 0;font-size:14px;color:var(--muted2)}
+.doc-callout strong{color:var(--accent)}
+.doc-kbd{font-family:'DM Mono',monospace;font-size:12px;background:var(--surface2);padding:2px 8px;border-radius:6px;border:1px solid var(--border);color:var(--ink)}
+.doc-table{width:100%;border-collapse:collapse;font-size:14px;margin:14px 0}
+.doc-table th,.doc-table td{text-align:left;padding:10px 12px;border:1px solid var(--border)}
+.doc-table th{background:var(--surface2);color:var(--muted2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.05em}
+.doc-steps{counter-reset:step}
+.doc-step{position:relative;padding-left:36px;margin-bottom:16px}
+.doc-step::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#111;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif}
+.mobile-nav-toggle{display:none}
+@media (max-width:900px){
+  :root{--sidebar:100%}
+  .docs-sidebar{
+    transform:translateX(-100%);transition:transform .25s ease;
+    width:min(300px,88vw);box-shadow:8px 0 40px rgba(0,0,0,0.4);
+  }
+  .docs-sidebar.open{transform:translateX(0)}
+  .docs-main{margin-left:0;padding:0 18px 60px;max-width:none}
+  .mobile-nav-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+  .docs-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:15}
+  .docs-backdrop.show{display:block}
+}
+.docs-progress-wrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:100;background:var(--surface);pointer-events:none}
+.docs-progress{height:100%;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--accent),var(--accent2));transition:transform .12s ease-out}
+.docs-search-wrap{padding:0 12px 12px}
+.docs-search{
+  width:100%;padding:10px 12px 10px 36px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--ink);font-size:14px;font-family:inherit;outline:none
+}
+.docs-search:focus{border-color:rgba(200,241,53,0.45);box-shadow:0 0 0 3px rgba(200,241,53,0.12)}
+.docs-search-wrap{position:relative}
+.docs-search-wrap::before{content:"";position:absolute;left:22px;top:50%;transform:translateY(-50%);width:16px;height:16px;opacity:0.45;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f4f3ff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.doc-h2-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.doc-h2-row h2{margin-bottom:0}
+.doc-section-link{
+  flex-shrink:0;margin-top:4px;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s,border-color .15s
+}
+.doc-section-link:hover{background:rgba(255,255,255,0.08);color:var(--accent);border-color:rgba(200,241,53,0.25)}
+.doc-section-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.doc-section-link svg{width:16px;height:16px;opacity:0.85}
+.docs-to-top{
+  position:fixed;right:20px;bottom:24px;z-index:50;width:44px;height:44px;border-radius:50%;
+  border:1px solid var(--border);background:var(--surface2);color:var(--ink);cursor:pointer;
+  box-shadow:0 8px 32px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .2s,visibility .2s,transform .2s
+}
+.docs-to-top.visible{opacity:1;visibility:visible;transform:translateY(0)}
+.docs-to-top:hover{background:rgba(255,255,255,0.1)}
+.docs-to-top:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.doc-checklist{border:1px solid var(--border);border-radius:var(--r);padding:8px 0;background:rgba(255,255,255,0.02);margin:16px 0}
+.doc-check{display:flex;align-items:flex-start;gap:12px;padding:10px 16px;cursor:pointer;font-size:15px;color:var(--muted2);transition:color .15s}
+.doc-check:hover{color:var(--ink)}
+.doc-check input{width:18px;height:18px;margin-top:3px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.doc-check.done{color:var(--muted);text-decoration:line-through}
+.doc-faq-item{border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;background:rgba(255,255,255,0.02);overflow:hidden}
+.doc-faq-item summary{
+  padding:14px 44px 14px 16px;cursor:pointer;font-weight:600;font-size:15px;list-style:none;position:relative;color:var(--ink);
+  transition:background .15s
+}
+.doc-faq-item summary::-webkit-details-marker{display:none}
+.doc-faq-item summary::after{content:"";position:absolute;right:16px;top:50%;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-60%) rotate(45deg);transition:transform .2s}
+.doc-faq-item[open] summary{background:rgba(255,255,255,0.04)}
+.doc-faq-item[open] summary::after{transform:translateY(-20%) rotate(225deg)}
+.doc-faq-item p{padding:0 16px 16px;margin:0;font-size:15px;color:var(--muted2)}
+.doc-shortcut-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.doc-copy-mini{
+  padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted2);
+  font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0
+}
+.doc-copy-mini:hover{color:var(--accent);border-color:rgba(200,241,53,0.3)}
+.doc-toast{
+  position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(12px);z-index:110;
+  padding:10px 18px;border-radius:999px;background:var(--surface2);border:1px solid var(--border);
+  color:var(--ink);font-size:13px;font-weight:500;opacity:0;visibility:hidden;transition:opacity .2s,transform .2s,visibility .2s;
+  box-shadow:0 12px 40px rgba(0,0,0,0.35);pointer-events:none
+}
+.doc-toast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+}
+@media (max-width:900px){
+  .docs-to-top{right:14px;bottom:18px}
+  .doc-h2-row{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="docs-progress-wrap" aria-hidden="true"><div class="docs-progress" id="docsProgress"></div></div>
+<div class="doc-toast" id="docToast" role="status">Link copied</div>
+<div class="docs-backdrop" id="docsBackdrop" onclick="closeSide()" aria-hidden="true"></div>
+<div class="docs-layout">
+  <aside class="docs-sidebar" id="docsSidebar" aria-label="Documentation navigation">
+    <div class="docs-brand">
+      <div class="docs-logo">LR</div>
+      <div class="docs-brand-text">LetsResume Docs</div>
+    </div>
+    <div class="docs-search-wrap">
+      <label for="docsSearch" class="visually-hidden">Search documentation</label>
+      <input type="search" id="docsSearch" class="docs-search" placeholder="Search sections…" autocomplete="off" spellcheck="false"/>
+    </div>
+    <nav class="docs-nav" id="docsNav">
+      <h2>Start</h2>
+      <a href="#intro">Introduction</a>
+      <a href="#getting-started">Getting started</a>
+      <a href="#account-auth">Account &amp; sign-in</a>
+      <h2>Product</h2>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#resumes">My Resumes</a>
+      <a href="#ats-checker">ATS Checker</a>
+      <a href="#templates">Templates</a>
+      <a href="#guided-editor">Guided template editor</a>
+      <a href="#live-editor">Live resume editor</a>
+      <a href="#career-tips">Career Tips</a>
+      <h2>Reference</h2>
+      <a href="#keyboard">Shortcuts</a>
+      <a href="#admin">Admin</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </aside>
+
+  <div class="docs-main">
+    <header class="docs-topbar">
+      <button type="button" class="mobile-nav-toggle" id="mobileNavBtn" onclick="toggleSide()" aria-controls="docsSidebar" aria-expanded="false">☰ Menu</button>
+      <h1>LetsResume — User documentation</h1>
+      <div class="docs-top-actions">
+        <a class="docs-btn" href="/">← Home</a>
+        <a class="docs-btn primary" href="/auth">Open app</a>
+      </div>
+    </header>
+
+    <section class="doc-section" id="intro">
+      <h2>Introduction</h2>
+      <p><strong>LetsResume</strong> is an AI-assisted resume builder with an <strong>ATS (Applicant Tracking System) score checker</strong>, multiple templates, and cloud storage. This guide explains every main screen and how to get from sign-up to a polished, job-ready resume.</p>
+      <div class="doc-callout"><strong>Tip:</strong> Your live deployment may be at <code class="doc-kbd">letsresume.netlify.app</code> — bookmark it and use the same account everywhere.</div>
+    </section>
+
+    <section class="doc-section" id="getting-started">
+      <h2>Getting started</h2>
+      <p>Track your first-run checklist — it is saved in this browser only.</p>
+      <div class="doc-checklist" id="gettingStartedChecklist" aria-label="Getting started checklist">
+        <label class="doc-check"><input type="checkbox" data-key="doc-gs-1"/> <span>Create an account from <strong>Start for free</strong> or <strong>Sign in</strong> (follow password rules on the form).</span></label>
+        <label class="doc-check"><input type="checkbox" data-key="doc-gs-2"/> <span>Open the <strong>Dashboard</strong> — your saved resumes load from the database.</span></label>
+        <label class="doc-check"><input type="checkbox" data-key="doc-gs-3"/> <span>Start <strong>+ New Resume</strong> or pick <strong>Templates</strong> for guided or live editing.</span></label>
+        <label class="doc-check"><input type="checkbox" data-key="doc-gs-4"/> <span>Run the <strong>ATS Checker</strong> with a job description, then export PDF when ready.</span></label>
+      </div>
+      <p>The sections below explain each area in depth — use the sidebar or search to jump around.</p>
+    </section>
+
+    <section class="doc-section" id="account-auth">
+      <h2>Account &amp; sign-in</h2>
+      <ul>
+        <li><strong>Register / Log in</strong> — Single auth page with tabs for creating an account or signing in. Sessions use a token stored in the browser; logging out clears it.</li>
+        <li><strong>Password</strong> — Follow the on-screen rules (minimum length and maximum length are enforced on both client and server).</li>
+        <li><strong>Protected pages</strong> — Dashboard and editors expect you to be logged in. If your session expires, you may be redirected to sign in again.</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="dashboard">
+      <h2>Dashboard</h2>
+      <p>The dashboard is the hub after login.</p>
+      <h3>Sidebar (left)</h3>
+      <ul>
+        <li><strong>Dashboard</strong> — Overview stats and your latest resumes.</li>
+        <li><strong>My Resumes</strong> — Full grid of cards: open editor, ATS, or delete.</li>
+        <li><strong>ATS Checker</strong> — Analyze resumes against a job description, history, and keyword bank.</li>
+        <li><strong>Templates</strong> — Links to the guided and live editors.</li>
+        <li><strong>Career Tips</strong> — Curated advice (resume, ATS, interviews, job search).</li>
+        <li><strong>Home</strong> — Marketing site.</li>
+        <li><strong>Admin</strong> — Visible only if your user has admin rights in the database.</li>
+      </ul>
+      <h3>Top bar</h3>
+      <ul>
+        <li>Document title and subtitle change per section.</li>
+        <li><strong>Check ATS Score</strong> — Jumps to the ATS Checker.</li>
+        <li><strong>+ New Resume</strong> — Opens the guided template editor for a new resume.</li>
+        <li><strong>Log out</strong> — Ends your session.</li>
+      </ul>
+      <h3>Main dashboard page</h3>
+      <ul>
+        <li>Stat cards (totals, best ATS, etc.).</li>
+        <li><strong>Your Resumes</strong> — Quick list with Edit and ATS actions.</li>
+        <li><strong>ATS preview</strong> — Ring score and metric bars for your best-scoring saved resume when data exists.</li>
+        <li><strong>Recent Activity</strong> — At-a-glance actions.</li>
+      </ul>
+      <p>On small screens, use the <strong>☰</strong> control to open the sidebar over a dimmed backdrop; tap outside or navigate to close.</p>
+    </section>
+
+    <section class="doc-section" id="resumes">
+      <h2>My Resumes</h2>
+      <p>Lists every resume stored for your account. Each card shows title, template type, last updated time, and actions:</p>
+      <ul>
+        <li><strong>Edit</strong> — Opens the <strong>guided</strong> or <strong>live</strong> editor depending on how that resume was created.</li>
+        <li><strong>ATS</strong> — Opens the ATS Checker with that resume pre-selected.</li>
+        <li><strong>Delete</strong> — Removes the resume (confirm in the browser prompt).</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="ats-checker">
+      <h2>ATS Checker</h2>
+      <p>Helps align your resume with a specific job posting.</p>
+      <h3>Tabs</h3>
+      <ul>
+        <li><strong>Analyze Resume</strong> — Pick a saved resume, paste the <strong>job description</strong>, then run analysis. You get a score, metric breakdown, and suggestions.</li>
+        <li><strong>Score History</strong> — Past runs for quick comparison.</li>
+        <li><strong>Keyword Bank</strong> — Shows matched, partial, and missing keywords when a job description was used.</li>
+      </ul>
+      <p>Use the same flow from dashboard cards or the <strong>Check ATS Score</strong> button for faster access.</p>
+    </section>
+
+    <section class="doc-section" id="templates">
+      <h2>Templates</h2>
+      <p>Two entry points:</p>
+      <ul>
+        <li><strong>Guided · Classic</strong> — Wizard-driven steps, sidebar navigation between sections, Modern layout, finalize step with ATS panel.</li>
+        <li><strong>Live · New</strong> — Document-style editing on the page with toolbar, optional collapsible form, AI enhance, print/PDF.</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="guided-editor">
+      <h2>Guided template editor</h2>
+      <p>Path: <code class="doc-kbd">/template-editor.html</code> (often with <code class="doc-kbd">?mode=new</code> or <code class="doc-kbd">?mode=edit&amp;resumeId=...</code>).</p>
+      <h3>Wizard (new resumes)</h3>
+      <ul>
+        <li>Short questionnaire: accent color, layout (Modern, Live Editor, Live Split, GLA-style), photo preference, industry field.</li>
+        <li>On phones, the wizard scrolls inside the overlay so all steps are reachable.</li>
+      </ul>
+      <h3>Editor</h3>
+      <ul>
+        <li>Left step rail (hidden on narrow widths — use the editor flow in the main panel).</li>
+        <li>Center: form for the active step (header, experience, education, etc.).</li>
+        <li>Right: live preview when space allows.</li>
+        <li>Save ties to your account; use dashboard links to return.</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="live-editor">
+      <h2>Live resume editor</h2>
+      <p>Path: <code class="doc-kbd">/template-editor-live.html</code>. Edit content directly on the resume preview.</p>
+      <h3>Top bar</h3>
+      <ul>
+        <li>Rename the document title.</li>
+        <li><strong>Edit / Preview</strong> — Toggle editing vs read-only preview.</li>
+        <li><strong>PDF</strong> — Uses the browser print dialog (choose “Save as PDF” where available).</li>
+        <li><strong>Save</strong> — Persists to your account.</li>
+        <li><strong>Dashboard</strong> — Back to the dashboard.</li>
+      </ul>
+      <h3>Form &amp; sections (desktop)</h3>
+      <p>Left: <strong>LetsResume</strong> branding and step list (Header, Experience, Education, etc.). Center: form for the selected section. Right: live page preview.</p>
+      <p>Use the <strong>«</strong> edge control to collapse the form strip and focus on the canvas; open again to edit.</p>
+      <h3>Mobile</h3>
+      <p>The section rail and form open as a <strong>full-screen overlay</strong>. Tap <strong>Edit</strong> to open; close with <strong>✕</strong>, backdrop tap, or <kbd class="doc-kbd">Esc</kbd>. The resume uses most of the screen; use <strong>zoom</strong> controls in the toolbar to scale the page.</p>
+      <h3>Toolbar</h3>
+      <ul>
+        <li>Font size, bold/italic/underline, alignment, undo/redo.</li>
+        <li>Add entry / bullet helpers.</li>
+        <li><strong>AI Enhance Selected</strong> — Select text in the resume, then run AI (requires server configuration).</li>
+        <li><strong>Zoom</strong> — − / + / Reset for the preview scale.</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="career-tips">
+      <h2>Career Tips</h2>
+      <p>Static reference content grouped by topic: resume writing, ATS &amp; keywords, interviews, job search, and ongoing growth. Use it alongside the tools — no data entry required.</p>
+    </section>
+
+    <section class="doc-section" id="keyboard">
+      <h2>Keyboard shortcuts</h2>
+      <p class="doc-muted-line" style="font-size:14px;color:var(--muted);margin-bottom:12px">Use <strong>Copy</strong> to grab the shortcut text for notes or sharing.</p>
+      <table class="doc-table" id="shortcutTable">
+        <thead><tr><th>Shortcut</th><th>Action</th><th></th></tr></thead>
+        <tbody>
+          <tr data-copy="⌘/Ctrl + S"><td><kbd class="doc-kbd">⌘/Ctrl</kbd> + <kbd class="doc-kbd">S</kbd></td><td>Save (live editor)</td></tr>
+          <tr data-copy="⌘/Ctrl + P"><td><kbd class="doc-kbd">⌘/Ctrl</kbd> + <kbd class="doc-kbd">P</kbd></td><td>Print / PDF (live editor)</td></tr>
+          <tr data-copy="Esc"><td><kbd class="doc-kbd">Esc</kbd></td><td>Close mobile edit overlay (live editor)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="doc-section" id="admin">
+      <h2>Admin</h2>
+      <p>The <strong>Admin</strong> sidebar link appears only for users with <code class="doc-kbd">isAdmin: true</code> in the database. The admin page loads aggregate stats and user listings; it is not meant for general job seekers.</p>
+    </section>
+
+    <section class="doc-section" id="troubleshooting">
+      <h2>Troubleshooting</h2>
+      <ul>
+        <li><strong>Cannot log in</strong> — Check email/password rules; reset via your deployment’s support process if passwords are managed externally.</li>
+        <li><strong>Session expired / 401</strong> — Sign in again from <code class="doc-kbd">/auth</code>.</li>
+        <li><strong>Resumes not loading</strong> — Confirm API and database env vars on the server; check browser network tab for errors.</li>
+        <li><strong>AI Enhance fails</strong> — Server must have the AI API key configured (see project README).</li>
+        <li><strong>ATS score missing</strong> — Run an analysis with a job description; some scores appear only after analysis.</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="faq">
+      <h2>FAQ</h2>
+      <p style="margin-bottom:16px;font-size:15px;color:var(--muted2)">Tap a question to expand. Opening another closes the previous one.</p>
+      <div class="doc-faq-list" id="faqList">
+        <details class="doc-faq-item">
+          <summary>Is LetsResume free?</summary>
+          <p>Plans include Free (10 resumes, 15 AI uses/month, watermarked PDF), Pro (₹105/mo — 40 resumes, 50 AI/month, no watermark), and Team (₹799/mo — unlimited resumes &amp; AI). See Pricing on the home page.</p>
+        </details>
+        <details class="doc-faq-item">
+          <summary>Where is my data stored?</summary>
+          <p>Resumes and account data are stored in the app’s configured database (e.g. MongoDB) behind the API — not only in your browser.</p>
+        </details>
+        <details class="doc-faq-item">
+          <summary>Which editor should I use?</summary>
+          <p>Use the <strong>guided</strong> editor if you want step-by-step fields and a classic wizard. Use the <strong>live</strong> editor if you prefer editing like a document with rich formatting.</p>
+        </details>
+        <details class="doc-faq-item">
+          <summary>Does the ATS score guarantee a job?</summary>
+          <p>No. It is an optimization aid; real recruiters and systems vary.</p>
+        </details>
+      </div>
+    </section>
+
+    <p style="margin-top:48px;font-size:13px;color:var(--muted);line-height:1.7">© 2026 @letsresume by <a href="https://learnershut.com" target="_blank" rel="noopener noreferrer">learnershut.com</a> — made by Shivam Agrawal · <a href="/">Home</a> · <a href="/auth">Sign in</a><br/><span style="color:var(--muted2)">Built with <span style="color:var(--accent)">♥</span> by <a href="https://github.com/Shivamagrawal20" target="_blank" rel="noopener noreferrer">Shivam Agrawal</a></span></p>
+  </div>
+</div>
+<button type="button" class="docs-to-top" id="docsToTop" aria-label="Back to top" title="Back to top">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+(function(){
+  var toastEl=document.getElementById('docToast');
+  var toastTimer;
+  function showToast(msg){
+    if(!toastEl) return;
+    toastEl.textContent=msg||'Copied';
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(function(){ toastEl.classList.remove('show'); },2000);
+  }
+
+  var nav=document.getElementById('docsNav');
+  var links=nav?nav.querySelectorAll('a[href^="#"]'):[];
+  var sections=[];
+  links.forEach(function(a){
+    var id=a.getAttribute('href').slice(1);
+    var el=document.getElementById(id);
+    if(el) sections.push({id:id,el:el,link:a});
+  });
+  function setActive(){
+    var y=window.scrollY+120;
+    var current=sections[0];
+    sections.forEach(function(s){
+      if(s.el.offsetTop<=y) current=s;
+    });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    if(current) current.link.classList.add('active');
+  }
+  window.addEventListener('scroll',setActive,{passive:true});
+  setActive();
+
+  var progress=document.getElementById('docsProgress');
+  function setProgress(){
+    if(!progress) return;
+    var el=document.documentElement;
+    var h=el.scrollHeight-el.clientHeight;
+    var r=h>0?Math.min(1,window.scrollY/h):0;
+    progress.style.transform='scaleX('+r+')';
+  }
+  window.addEventListener('scroll',setProgress,{passive:true});
+  setProgress();
+
+  var toTop=document.getElementById('docsToTop');
+  function toggleToTop(){
+    if(!toTop) return;
+    toTop.classList.toggle('visible',window.scrollY>380);
+  }
+  window.addEventListener('scroll',toggleToTop,{passive:true});
+  toggleToTop();
+  if(toTop) toTop.addEventListener('click',function(){
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  var search=document.getElementById('docsSearch');
+  function filterNav(q){
+    q=(q||'').toLowerCase().trim();
+    if(!nav) return;
+    var h2s=nav.querySelectorAll('h2');
+    var alinks=nav.querySelectorAll('a');
+    alinks.forEach(function(a){
+      a.style.display=(!q||a.textContent.toLowerCase().indexOf(q)>=0)?'':'none';
+    });
+    h2s.forEach(function(h2){
+      var el=h2.nextElementSibling;
+      var any=false;
+      while(el&&el.tagName!=='H2'){
+        if(el.tagName==='A'&&el.style.display!=='none') any=true;
+        el=el.nextElementSibling;
+      }
+      h2.style.display=(!q||any)?'':'none';
+    });
+  }
+  if(search){
+    search.addEventListener('input',function(){ filterNav(search.value); });
+    search.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){ search.value=''; filterNav(''); search.blur(); }
+    });
+  }
+
+  var linkIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+  document.querySelectorAll('.doc-section').forEach(function(sec){
+    var id=sec.id;
+    if(!id) return;
+    var h2=sec.querySelector(':scope > h2');
+    if(!h2) return;
+    var row=document.createElement('div');
+    row.className='doc-h2-row';
+    h2.parentNode.insertBefore(row,h2);
+    row.appendChild(h2);
+    var btn=document.createElement('button');
+    btn.type='button';
+    btn.className='doc-section-link';
+    btn.setAttribute('aria-label','Copy link to this section');
+    btn.title='Copy link to this section';
+    btn.innerHTML=linkIcon;
+    btn.addEventListener('click',function(){
+      var url=location.origin+location.pathname+'#'+id;
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){ showToast('Link copied'); }).catch(function(){ fallbackCopy(url); });
+      } else fallbackCopy(url);
+    });
+    row.appendChild(btn);
+  });
+  function fallbackCopy(text){
+    var ta=document.createElement('textarea');
+    ta.value=text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); showToast('Link copied'); } catch(x){ showToast('Copy failed'); }
+    document.body.removeChild(ta);
+  }
+
+  var checklist=document.getElementById('gettingStartedChecklist');
+  if(checklist){
+    var prefix='letsresume-docs-';
+    checklist.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
+      var k=cb.getAttribute('data-key');
+      if(!k) return;
+      try{
+        if(localStorage.getItem(prefix+k)==='1'){ cb.checked=true; cb.closest('.doc-check').classList.add('done'); }
+      }catch(e){}
+      cb.addEventListener('change',function(){
+        var lab=cb.closest('.doc-check');
+        if(lab) lab.classList.toggle('done',cb.checked);
+        try{
+          if(cb.checked) localStorage.setItem(prefix+k,'1');
+          else localStorage.removeItem(prefix+k);
+        }catch(e){}
+      });
+    });
+  }
+
+  document.querySelectorAll('#shortcutTable tbody tr[data-copy]').forEach(function(tr){
+    var text=tr.getAttribute('data-copy');
+    var td=document.createElement('td');
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='doc-copy-mini';
+    b.textContent='Copy';
+    b.addEventListener('click',function(){
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){ showToast('Shortcut copied'); });
+      } else { var ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); showToast('Shortcut copied'); } catch(x){} document.body.removeChild(ta); }
+    });
+    td.appendChild(b);
+    tr.appendChild(td);
+  });
+
+  var faqList=document.getElementById('faqList');
+  if(faqList){
+    faqList.querySelectorAll('details').forEach(function(d){
+      d.addEventListener('toggle',function(){
+        if(!d.open) return;
+        faqList.querySelectorAll('details').forEach(function(o){
+          if(o!==d) o.open=false;
+        });
+      });
+    });
+  }
+
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape') return;
+    var sb=document.getElementById('docsSidebar');
+    if(sb&&sb.classList.contains('open')) closeSide();
+  });
+})();
+function toggleSide(){
+  var sb=document.getElementById('docsSidebar');
+  var bd=document.getElementById('docsBackdrop');
+  var btn=document.getElementById('mobileNavBtn');
+  if(!sb)return;
+  var open=!sb.classList.contains('open');
+  sb.classList.toggle('open',open);
+  if(bd) bd.classList.toggle('show',open);
+  if(btn) btn.setAttribute('aria-expanded',open?'true':'false');
+}
+function closeSide(){
+  var sb=document.getElementById('docsSidebar');
+  var bd=document.getElementById('docsBackdrop');
+  var btn=document.getElementById('mobileNavBtn');
+  if(sb) sb.classList.remove('open');
+  if(bd) bd.classList.remove('show');
+  if(btn) btn.setAttribute('aria-expanded','false');
+}
+document.getElementById('docsNav').addEventListener('click',function(e){
+  if(e.target.tagName==='A' && window.innerWidth<=900) closeSide();
+});
+</script>
+</body>
+</html>

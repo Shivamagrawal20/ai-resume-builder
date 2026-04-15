@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { env } from "../config/index.js";
+import { normalizePlan } from "../config/plans.js";
 import { User } from "../models/User.js";
 
 const SALT_ROUNDS = 10;
@@ -47,5 +48,6 @@ export function toPublicUser(user) {
     email: user.email,
     name: user.name ?? "",
     isAdmin: !!user.isAdmin,
+    plan: normalizePlan(user.plan),
   };
 }

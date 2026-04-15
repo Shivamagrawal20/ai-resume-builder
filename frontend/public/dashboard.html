@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>LetsResume — Dashboard</title>
+<meta name="description" content="LetsResume dashboard — manage resumes, run the ATS checker, templates, and career tips. Sign in to edit AI-assisted resumes."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://letsresume.netlify.app/dashboard.html"/>
+<meta property="og:title" content="Dashboard | LetsResume — Resume &amp; ATS Tools"/>
+<meta property="og:url" content="https://letsresume.netlify.app/dashboard.html"/>
+<meta property="og:type" content="website"/>
+<title>Dashboard | LetsResume — Resumes &amp; ATS Checker</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -15,6 +21,7 @@
 }
 html{font-size:15px}
 body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+body.dash-nav-open{overflow:hidden;touch-action:none}
 .shell{display:flex;min-height:100vh}
 .sidebar{width:64px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:20px 0;gap:4px;position:fixed;left:0;top:0;bottom:0;z-index:50;transition:width var(--trans);overflow:hidden}
 .sidebar:hover{width:220px}
@@ -34,11 +41,16 @@ body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--i
 .sidebar:hover .sb-badge{opacity:1}
 .sb-avatar-section{margin-top:auto;padding:0 8px;width:100%}
 .sb-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--blue));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
-.main{margin-left:64px;flex:1;display:flex;flex-direction:column;min-height:100vh}
-.topbar{padding:16px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(13,13,18,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:40}
+.main{margin-left:64px;flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
+.topbar{padding:16px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:rgba(13,13,18,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:40}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 .topbar-left h1{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;letter-spacing:-0.3px}
 .topbar-left p{font-size:13px;color:var(--muted);margin-top:1px}
-.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.nav-menu-btn{display:none;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--ink);cursor:pointer;flex-shrink:0;font-size:18px;line-height:1}
+.nav-menu-btn:hover{background:var(--surface3)}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:90;backdrop-filter:blur(3px)}
+.sidebar-backdrop--visible{display:block}
 .tb-btn{padding:8px 18px;border-radius:100px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:var(--trans);border:none}
 .tb-btn.primary{background:var(--accent);color:#111}.tb-btn.primary:hover{background:#b5da2a;transform:translateY(-1px)}
 .tb-btn.ghost{background:rgba(255,255,255,0.06);color:var(--ink);border:1px solid var(--border2)}
@@ -103,11 +115,25 @@ a.tb-btn{display:inline-block;text-decoration:none;text-align:center}
 .act-icon{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
 .act-title{font-size:13px;font-weight:500;margin-bottom:2px}
 .act-time{font-size:11px;color:var(--muted)}
-.tips-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:18px}
-.tip-emoji{font-size:24px;margin-bottom:10px}
-.tip-title{font-size:13px;font-weight:600;margin-bottom:5px}
-.tip-desc{font-size:12px;color:var(--muted2);line-height:1.6}
+.tips-shell{max-width:1040px;margin:0 auto}
+.tips-intro{font-size:14px;color:var(--muted2);line-height:1.65;margin-bottom:26px;max-width:720px}
+.tips-section{margin-bottom:32px}
+.tips-section:last-child{margin-bottom:0}
+.tips-section-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:4px;letter-spacing:-0.2px}
+.tips-section-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.45}
+.tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px 20px 20px 22px;position:relative;overflow:hidden;transition:var(--trans)}
+.tip-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tip-accent,var(--accent))}
+.tip-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 14px 44px rgba(0,0,0,0.28)}
+.cat-resume{--tip-accent:#3b82f6}
+.cat-ats{--tip-accent:#22d3ee}
+.cat-interview{--tip-accent:#a855f7}
+.cat-search{--tip-accent:#f97316}
+.cat-growth{--tip-accent:#22c55e}
+.tip-cat{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.tip-emoji{font-size:26px;margin-bottom:8px;line-height:1;display:block}
+.tip-title{font-size:14px;font-weight:600;margin-bottom:8px;line-height:1.35;color:var(--ink)}
+.tip-desc{font-size:13px;color:var(--muted2);line-height:1.55}
 .empty-state{padding:18px;border:1px dashed var(--border2);border-radius:var(--r2);color:var(--muted2);font-size:13px;background:rgba(255,255,255,0.02)}
 .dash-main{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:24px;align-items:start;margin-top:8px}
 @media (max-width:960px){.dash-main{grid-template-columns:1fr}}
@@ -229,11 +255,41 @@ a.tb-btn{display:inline-block;text-decoration:none;text-align:center}
 .ats-kw-empty{color:var(--muted);font-size:13px;line-height:1.55}
 @media (max-width:1100px){.stat-grid{grid-template-columns:1fr 1fr}.resume-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.ats-hist-bar{flex:1;width:100%;max-width:none;margin-top:8px}}
 @media (max-width:700px){.ats-hist-item{flex-wrap:wrap}.ats-hist-bar{flex-basis:100%}}
+@media (max-width:960px){
+  .nav-menu-btn{display:flex}
+  .main{margin-left:0!important}
+  .sidebar{width:min(288px,86vw)!important;transform:translateX(-100%);z-index:100!important;align-items:stretch;padding-left:8px;padding-right:8px;box-shadow:8px 0 40px rgba(0,0,0,0.45)}
+  .sidebar:hover{width:min(288px,86vw)!important}
+  .sidebar.sidebar--open{transform:translateX(0)}
+  .sb-logo-row{width:100%;justify-content:flex-start}
+  .sb-label,.sb-logo-text,.sb-badge{opacity:1!important}
+  .sb-item{width:calc(100% - 8px);justify-content:flex-start}
+  .page{padding:16px 14px}
+  .topbar{padding:12px 14px}
+  .topbar-left h1{font-size:17px}
+  .topbar-right{width:100%;justify-content:flex-start}
+  .tb-btn{padding:8px 12px;font-size:12px}
+  .notif-btn{display:none}
+  .ats-tabs{flex-wrap:wrap;gap:6px}
+  .ats-tab{flex:1 1 auto;min-width:0;text-align:center;padding:10px 8px;font-size:12px}
+  .templates-grid{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .stat-grid{grid-template-columns:1fr!important}
+  .resume-grid{grid-template-columns:1fr!important}
+  .tips-grid{grid-template-columns:1fr}
+  .sec-header{flex-direction:column;align-items:flex-start;gap:8px}
+}
+@media (min-width:961px){
+  .sidebar{transform:none!important}
+  .sidebar-backdrop--visible{display:none!important}
+}
 </style>
 </head>
 <body>
 <div class="shell">
-<div class="sidebar">
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileNav()" aria-hidden="true"></div>
+<div class="sidebar" id="dashSidebar">
   <div class="sb-logo-row"><div class="sb-logo">LR</div><span class="sb-logo-text">LetsResume</span></div>
   <div class="sb-item active" onclick="showPage('dashboard',this)"><span class="sb-icon">DB</span><span class="sb-label">Dashboard</span></div>
   <div class="sb-item" onclick="showPage('resumes',this)"><span class="sb-icon">CV</span><span class="sb-label">My Resumes</span><span class="sb-badge">3</span></div>
@@ -241,13 +297,20 @@ a.tb-btn{display:inline-block;text-decoration:none;text-align:center}
   <div class="sb-item" onclick="showPage('templates',this)"><span class="sb-icon">TP</span><span class="sb-label">Templates</span></div>
   <div class="sb-item" onclick="showPage('tips',this)"><span class="sb-icon">TI</span><span class="sb-label">Career Tips</span></div>
   <div class="sb-divider"></div>
+  <a class="sb-item" href="/docs.html"><span class="sb-icon">DC</span><span class="sb-label">Docs</span></a>
   <a class="sb-item" href="/"><span class="sb-icon">HM</span><span class="sb-label">Home</span></a>
-  <a class="sb-item" href="/admin.html" title="Requires isAdmin on your user in DB"><span class="sb-icon">AD</span><span class="sb-label">Admin</span></a>
+  <a class="sb-item" id="sbAdminLink" href="/admin.html" title="Admin" style="display:none" aria-hidden="true"><span class="sb-icon">AD</span><span class="sb-label">Admin</span></a>
 </div>
 
 <div class="main">
   <div class="topbar">
-    <div class="topbar-left"><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Welcome back 👋</p></div>
+    <div class="topbar-left">
+      <button type="button" class="nav-menu-btn" id="navMenuBtn" onclick="toggleMobileNav()" aria-label="Open navigation menu" aria-expanded="false" aria-controls="dashSidebar">☰</button>
+      <div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSubtitle">Welcome back 👋</p>
+      </div>
+    </div>
     <div class="topbar-right">
       <div class="notif-btn">🔔<div class="notif-dot"></div></div>
       <button class="tb-btn ghost" onclick="showPage('ats',document.querySelectorAll('.sb-item')[2])">Check ATS Score</button>
@@ -417,15 +480,104 @@ a.tb-btn{display:inline-block;text-decoration:none;text-align:center}
       </div>
     </div>
   </div>
-  <div class="page" id="page-tips"><div class="tips-grid"><div class="tip-card"><div class="tip-emoji">🎯</div><div class="tip-title">Use Action Verbs</div><div class="tip-desc">Start bullets with strong verbs and quantify outcomes.</div></div><div class="tip-card"><div class="tip-emoji">📊</div><div class="tip-title">Quantify Impact</div><div class="tip-desc">Numbers improve credibility and ATS match quality.</div></div><div class="tip-card"><div class="tip-emoji">🤖</div><div class="tip-title">Match Keywords</div><div class="tip-desc">Mirror role keywords from job descriptions.</div></div></div></div>
+  <div class="page" id="page-tips">
+    <div class="tips-shell">
+      <p class="tips-intro">Short, practical ideas you can use while you build your resume, run ATS checks, and move through interviews. Pick one tip per week and apply it consistently.</p>
+
+      <section class="tips-section" aria-labelledby="tips-h-resume">
+        <h2 class="tips-section-title" id="tips-h-resume">Resume writing</h2>
+        <p class="tips-section-sub">Make every line earn its place—clear outcomes beat buzzwords.</p>
+        <div class="tips-grid">
+          <article class="tip-card cat-resume"><span class="tip-cat">Impact</span><span class="tip-emoji" aria-hidden="true">🎯</span><div class="tip-title">Lead with action verbs</div><p class="tip-desc">Open bullets with verbs like “shipped,” “reduced,” or “led.” Pair them with what changed for the team or customer.</p></article>
+          <article class="tip-card cat-resume"><span class="tip-cat">Credibility</span><span class="tip-emoji" aria-hidden="true">📊</span><div class="tip-title">Quantify whenever you can</div><p class="tip-desc">Percentages, timelines, revenue, and user counts make achievements scannable for recruiters and ATS parsers.</p></article>
+          <article class="tip-card cat-resume"><span class="tip-cat">Focus</span><span class="tip-emoji" aria-hidden="true">✂️</span><div class="tip-title">One page for early career</div><p class="tip-desc">Unless you have many years of relevant roles, keep a tight one-page story. Cut older or unrelated lines first.</p></article>
+          <article class="tip-card cat-resume"><span class="tip-cat">Polish</span><span class="tip-emoji" aria-hidden="true">✅</span><div class="tip-title">Proofread out loud</div><p class="tip-desc">Read once for typos, once for tense consistency, and fix formatting glitches that break PDF exports.</p></article>
+        </div>
+      </section>
+
+      <section class="tips-section" aria-labelledby="tips-h-ats">
+        <h2 class="tips-section-title" id="tips-h-ats">ATS &amp; keywords</h2>
+        <p class="tips-section-sub">Help parsers read your file and match the role you want.</p>
+        <div class="tips-grid">
+          <article class="tip-card cat-ats"><span class="tip-cat">Matching</span><span class="tip-emoji" aria-hidden="true">🔑</span><div class="tip-title">Mirror the job description</div><p class="tip-desc">Weave in skills and phrases from the posting—naturally, in context—so keyword checks reflect real experience.</p></article>
+          <article class="tip-card cat-ats"><span class="tip-cat">Format</span><span class="tip-emoji" aria-hidden="true">📄</span><div class="tip-title">Keep layout parser-friendly</div><p class="tip-desc">Single-column layouts, standard headings (Experience, Education), and common fonts reduce parsing errors.</p></article>
+          <article class="tip-card cat-ats"><span class="tip-cat">Tailoring</span><span class="tip-emoji" aria-hidden="true">🧩</span><div class="tip-title">Tweak per application</div><p class="tip-desc">Adjust your summary and top bullets for each role. A small customization often beats one generic resume for everything.</p></article>
+          <article class="tip-card cat-ats"><span class="tip-cat">Check</span><span class="tip-emoji" aria-hidden="true">📈</span><div class="tip-title">Run ATS before you submit</div><p class="tip-desc">Use the checker here with the job description to spot missing keywords and weak sections early.</p></article>
+        </div>
+      </section>
+
+      <section class="tips-section" aria-labelledby="tips-h-interview">
+        <h2 class="tips-section-title" id="tips-h-interview">Interviews</h2>
+        <p class="tips-section-sub">Turn preparation into calm, specific answers.</p>
+        <div class="tips-grid">
+          <article class="tip-card cat-interview"><span class="tip-cat">Structure</span><span class="tip-emoji" aria-hidden="true">⭐</span><div class="tip-title">Use STAR for stories</div><p class="tip-desc">Situation, Task, Action, Result—keeps behavioral answers short and proves impact without rambling.</p></article>
+          <article class="tip-card cat-interview"><span class="tip-cat">Research</span><span class="tip-emoji" aria-hidden="true">🔎</span><div class="tip-title">Know the company’s angle</div><p class="tip-desc">Skim recent news, product changes, and values. Tie one concrete detail to why you want this team.</p></article>
+          <article class="tip-card cat-interview"><span class="tip-cat">Closing</span><span class="tip-emoji" aria-hidden="true">💬</span><div class="tip-title">Ask two sharp questions</div><p class="tip-desc">Ask about success in the role and how the team collaborates—questions you genuinely care about.</p></article>
+          <article class="tip-card cat-interview"><span class="tip-cat">Follow-up</span><span class="tip-emoji" aria-hidden="true">✉️</span><div class="tip-title">Thank-you within 24 hours</div><p class="tip-desc">Brief note: thanks, one thing you enjoyed discussing, and enthusiasm. No walls of text.</p></article>
+        </div>
+      </section>
+
+      <section class="tips-section" aria-labelledby="tips-h-search">
+        <h2 class="tips-section-title" id="tips-h-search">Job search</h2>
+        <p class="tips-section-sub">Stay organized and visible without burning out.</p>
+        <div class="tips-grid">
+          <article class="tip-card cat-search"><span class="tip-cat">Pipeline</span><span class="tip-emoji" aria-hidden="true">📋</span><div class="tip-title">Track applications</div><p class="tip-desc">Spreadsheet or tool: company, role, date sent, status, and link. Makes follow-ups and prep easier.</p></article>
+          <article class="tip-card cat-search"><span class="tip-cat">Profile</span><span class="tip-emoji" aria-hidden="true">🌐</span><div class="tip-title">Align your headline</div><p class="tip-desc">Your LinkedIn or portfolio headline should match the role family you’re targeting—not only your current title.</p></article>
+          <article class="tip-card cat-search"><span class="tip-cat">Network</span><span class="tip-emoji" aria-hidden="true">🤝</span><div class="tip-title">Warm intros beat cold spam</div><p class="tip-desc">Short, specific asks to people you know—or thoughtful comments on posts—beat generic connection blasts.</p></article>
+          <article class="tip-card cat-search"><span class="tip-cat">Negotiation</span><span class="tip-emoji" aria-hidden="true">💼</span><div class="tip-title">Research comp ranges first</div><p class="tip-desc">Know market data for level and location before you talk numbers. Anchor with a range, not a guess.</p></article>
+        </div>
+      </section>
+
+      <section class="tips-section" aria-labelledby="tips-h-growth">
+        <h2 class="tips-section-title" id="tips-h-growth">Ongoing growth</h2>
+        <p class="tips-section-sub">Small habits that compound between applications.</p>
+        <div class="tips-grid">
+          <article class="tip-card cat-growth"><span class="tip-cat">Skills</span><span class="tip-emoji" aria-hidden="true">🛠️</span><div class="tip-title">Show learning on the resume</div><p class="tip-desc">Relevant courses, certifications, or side projects belong in a compact section if they support your target role.</p></article>
+          <article class="tip-card cat-growth"><span class="tip-cat">Feedback</span><span class="tip-emoji" aria-hidden="true">🔄</span><div class="tip-title">Iterate after rejections</div><p class="tip-desc">If you get a pattern of no responses, refresh keywords, summary, or first bullet under each role.</p></article>
+        </div>
+      </section>
+    </div>
+  </div>
 </div>
 </div>
 
 <script>
 const TOKEN_KEY = "arb_token";
 let resumes = [];
-const pageTitles={dashboard:["Dashboard","Welcome back 👋"],resumes:["My Resumes","Manage and edit your saved resumes"],ats:["ATS Score Checker","Analyze, history & keyword bank"],templates:["Templates","Guided editor or live editor"],tips:["Career Tips","Expert advice"]};
-function showPage(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));if(el)el.classList.add('active');const [title,sub]=pageTitles[id]||[id,''];document.getElementById('pageTitle').textContent=title;document.getElementById('pageSubtitle').textContent=sub;}
+const pageTitles={dashboard:["Dashboard","Welcome back 👋"],resumes:["My Resumes","Manage and edit your saved resumes"],ats:["ATS Score Checker","Analyze, history & keyword bank"],templates:["Templates","Guided editor or live editor"],tips:["Career Tips","Resume, ATS, interviews, and job search"]};
+function closeMobileNav(){
+  var sb=document.getElementById('dashSidebar');
+  var bd=document.getElementById('sidebarBackdrop');
+  var btn=document.getElementById('navMenuBtn');
+  if(sb) sb.classList.remove('sidebar--open');
+  if(bd) bd.classList.remove('sidebar-backdrop--visible');
+  document.body.classList.remove('dash-nav-open');
+  if(btn){ btn.setAttribute('aria-expanded','false'); btn.setAttribute('aria-label','Open navigation menu'); }
+}
+function toggleMobileNav(){
+  var sb=document.getElementById('dashSidebar');
+  var bd=document.getElementById('sidebarBackdrop');
+  var btn=document.getElementById('navMenuBtn');
+  if(!sb||!bd) return;
+  var open=!sb.classList.contains('sidebar--open');
+  sb.classList.toggle('sidebar--open',open);
+  bd.classList.toggle('sidebar-backdrop--visible',open);
+  document.body.classList.toggle('dash-nav-open',open);
+  if(btn){
+    btn.setAttribute('aria-expanded',open?'true':'false');
+    btn.setAttribute('aria-label',open?'Close navigation menu':'Open navigation menu');
+  }
+}
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const [title,sub]=pageTitles[id]||[id,''];
+  document.getElementById('pageTitle').textContent=title;
+  document.getElementById('pageSubtitle').textContent=sub;
+  closeMobileNav();
+}
 function openNewResume(){window.location.href="/template-editor.html?mode=new&skipWizard=0";}
 function templateLabel(id){
   const m = {
@@ -895,6 +1047,23 @@ function renderStats(){
   const badge = document.querySelector(".sb-badge");
   if (badge) badge.textContent = String(resumes.length);
 }
+async function initAdminSidebarLink(){
+  const link = document.getElementById("sbAdminLink");
+  if (!link) return;
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return;
+  try {
+    const res = await fetch("/api/auth/me", { headers: { Authorization: "Bearer " + token } });
+    if (res.status === 401) return;
+    const data = await res.json().catch(() => ({}));
+    if (data.user && data.user.isAdmin) {
+      link.style.display = "flex";
+      link.setAttribute("aria-hidden", "false");
+    }
+  } catch (_e) {
+    /* leave hidden */
+  }
+}
 async function fetchResumes(){
   const token = localStorage.getItem(TOKEN_KEY);
   if (!token) {
@@ -927,6 +1096,7 @@ async function deleteResume(id){
   renderResumeGrids();
   refreshDashboardAtsPreview().catch(() => {});
 }
+initAdminSidebarLink();
 fetchResumes().catch((err) => {
   alert(err.message || "Unable to load dashboard data");
 });

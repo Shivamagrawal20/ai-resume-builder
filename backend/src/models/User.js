@@ -7,6 +7,11 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     name: { type: String, trim: true },
     isAdmin: { type: Boolean, default: false },
+    /** free | pro | team — enforced for resume & AI limits */
+    plan: { type: String, enum: ["free", "pro", "team"], default: "free" },
+    /** YYYY-MM for aiUsageCount reset */
+    aiUsageMonth: { type: String, default: "" },
+    aiUsageCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

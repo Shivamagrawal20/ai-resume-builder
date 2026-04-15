@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>LetsResume — Admin</title>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="description" content="LetsResume admin — internal stats only."/>
+<title>Admin | LetsResume</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -39,6 +41,18 @@ a.back{display:inline-block;margin-bottom:16px}
 a.link:hover{text-decoration:underline}
 .empty{color:var(--muted);padding:16px 0}
 code{background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-size:12px}
+@media (max-width:768px){
+  body{padding:16px 14px}
+  h1{font-size:19px}
+  .panel{padding:16px}
+  .stats{grid-template-columns:1fr 1fr}
+  table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .row{flex-direction:column;align-items:stretch}
+  button{width:100%}
+}
+@media (max-width:480px){
+  .stats{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -55,6 +69,7 @@ code{background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-si
   </div>
   <p class="err" id="msg" style="display:none"></p>
   <p class="sub" style="margin-top:16px;margin-bottom:0"><strong>Promote a user in MongoDB</strong> (replace email):<br/><code style="display:block;margin-top:8px;white-space:pre-wrap;word-break:break-all">db.users.updateOne({ email: "you@example.com" }, { $set: { isAdmin: true } })</code></p>
+  <p class="sub" style="margin-top:12px;margin-bottom:0"><strong>Subscription plan</strong> (<code>free</code>, <code>pro</code>, <code>team</code>):<br/><code style="display:block;margin-top:8px;white-space:pre-wrap;word-break:break-all">db.users.updateOne({ email: "you@example.com" }, { $set: { plan: "pro" } })</code></p>
 </div>
 
 <div class="panel" id="results" style="display:none">
@@ -63,7 +78,7 @@ code{background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-si
     <div class="stat"><b id="sResumes">0</b><span>Total resumes</span></div>
   </div>
   <table>
-    <thead><tr><th>Email</th><th>Name</th><th>Registered</th><th>Resumes</th></tr></thead>
+    <thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Registered</th><th>Resumes</th></tr></thead>
     <tbody id="tbody"></tbody>
   </table>
   <p class="empty" id="empty" style="display:none">No users yet.</p>
@@ -138,6 +153,7 @@ code{background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-si
             tr.innerHTML =
               '<td>' + escapeHtml(u.email || '') + '</td>' +
               '<td>' + escapeHtml(u.name || '—') + '</td>' +
+              '<td>' + escapeHtml(u.plan || 'free') + '</td>' +
               '<td>' + escapeHtml(fmtDate(u.createdAt)) + '</td>' +
               '<td class="count">' + Number(u.resumeCount || 0) + '</td>';
             tbody.appendChild(tr);

@@ -78,13 +78,15 @@ npm start
 | `GET` | `/health` | No | Liveness |
 | `POST` | `/api/auth/register` | No | `{ user, token }` |
 | `POST` | `/api/auth/login` | No | `{ user, token }` |
-| `GET` | `/api/auth/me` | Yes | Current user |
+| `GET` | `/api/auth/me` | Yes | `{ user, usage, features }` — `user.plan` is `free` \| `pro` \| `team`; `usage` has resume & monthly AI counts vs plan caps; `features.watermarkPdf` is true on Free (PDF watermark in live editor). Set `plan` in MongoDB until billing is wired. |
 | `GET` | `/api/resumes` | Yes | List resumes |
 | `GET` | `/api/resumes/:id` | Yes | One resume |
-| `POST` | `/api/resumes` | Yes | Create |
+| `POST` | `/api/resumes` | Yes | Create — enforces max resumes by plan (`403` + `RESUME_LIMIT`). |
 | `PATCH` | `/api/resumes/:id` | Yes | Update |
 | `DELETE` | `/api/resumes/:id` | Yes | Delete |
-| `POST` | `/api/ai/suggest` | Yes | `{ section, context }` → `{ suggestion }` |
+| `POST` | `/api/ai/suggest` | Yes | `{ section, context }` → `{ suggestion }` — enforces monthly AI quota by plan (`403` + `AI_LIMIT`). |
+
+**Plans (field `users.plan`):** `free` — 10 resumes, 15 AI/month, watermarked PDF; `pro` — 40 resumes, 50 AI/month, no watermark; `team` — unlimited resumes & AI, shared library flag in `features`.
 
 ## How to explain the backend (demos / interviews)
 

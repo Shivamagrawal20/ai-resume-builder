@@ -1,4 +1,5 @@
 import { Resume } from "../models/Resume.js";
+import * as usage from "./usage.service.js";
 
 export async function listResumes(userId) {
   return Resume.find({ userId }).sort({ updatedAt: -1 }).lean();
@@ -18,6 +19,7 @@ export async function getResume(userId, resumeId) {
 
 
 export async function createResume(userId, { title, content }) {
+  await usage.assertCanCreateResume(userId);
   const resume = await Resume.create({ userId, title, content: content ?? {} });
   return resume.toObject();
 }
