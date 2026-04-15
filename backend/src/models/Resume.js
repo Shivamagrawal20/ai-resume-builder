@@ -10,3 +10,4 @@ const resumeSchema = new mongoose.Schema(
 );
 
 export const Resume = mongoose.models.Resume ?? mongoose.model("Resume", resumeSchema);
+
