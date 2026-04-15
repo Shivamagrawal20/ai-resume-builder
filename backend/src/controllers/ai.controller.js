@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as aiService from "../services/ai.service.js";
-import { scoreResumeForAts } from "../services/ats.service.js";
+import { scoreResumeForAts } from "../services/ats.service.js"; 
+
 
 export const suggest = asyncHandler(async (req, res) => {
   const { section, context } = req.body;
