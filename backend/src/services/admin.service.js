@@ -22,6 +22,8 @@ export async function getUsersWithResumeCounts() {
         createdAt: 1,
         resumeCount: { $size: "$_resumes" },
       },
+
+      
     },
   ]);
   const totalResumes = await Resume.countDocuments();
