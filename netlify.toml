@@ -1,11 +1,14 @@
-# Frontend only — API runs elsewhere. Required: VITE_API_URL = your API origin (https://…, no trailing slash), same for Production + Deploy previews you use.
-# Build also writes dist/_redirects to proxy /api/* for public HTML pages.
+# Frontend only — API runs elsewhere.
+# For login/API to work, add VITE_API_URL = your deployed API origin (https://…, no slash at end) in Netlify → Environment variables, then redeploy.
+# Build writes dist/_redirects: /api/* → API when VITE_API_URL is set, plus SPA fallback for React Router.
 
 [build]
   base = "frontend"
-  command = "npm ci --include=dev && npm run build"
+  command = "npm ci && npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
   NPM_CONFIG_PRODUCTION = "false"
+  # Netlify compares env *values* to the whole repo; PORT/NODE_ENV match harmless text (e.g. "4000", "production" in node_modules). Omit scanning for these keys on the static site. Do not set PORT or NODE_ENV here — remove them from Netlify UI if present.
+  SECRETS_SCAN_OMIT_KEYS = "PORT,NODE_ENV"

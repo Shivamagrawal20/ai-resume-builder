@@ -1,0 +1,17 @@
+# Optional: connect repo in Render → New → Blueprint to apply. Or create Web Service manually and match these settings.
+# Set secrets in the Render dashboard: MONGODB_URI, JWT_SECRET, CORS_ORIGIN, GEMINI_API_KEY (optional), etc.
+
+services:
+  - type: web
+    name: ai-resume-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"

@@ -3,18 +3,10 @@ import { resolve } from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-/** Netlify runs builds with NETLIFY=true. Without VITE_API_URL the bundle calls /api on Netlify (404). */
-function assertNetlifyApiUrl() {
-  if (process.env.NETLIFY !== "true") return;
-  if (String(process.env.VITE_API_URL || "").trim()) return;
-  throw new Error(
-    "Set VITE_API_URL in Netlify → Environment variables to your backend origin (e.g. https://your-api.onrender.com), no trailing slash. " +
-      "Save, then Deploys → Trigger deploy → Clear cache and deploy site. " +
-      "The name must be exactly VITE_API_URL (not a 'server-only' secret key — any env var works; Vite only reads names starting with VITE_)."
-  );
-}
-
-/** Netlify: proxy /api/* → backend so plain /api paths in public/*.html work; also enables same-origin API if you prefer. */
+/**
+ * Netlify: optional /api/* proxy when VITE_API_URL is set at build time; always add SPA fallback for React Router.
+ * Add VITE_API_URL in Netlify (Site → Environment variables) = your API origin, e.g. https://api.example.com — no trailing slash.
+ */
 function netlifyRedirectsPlugin() {
   let outDir = "dist";
   return {
@@ -26,15 +18,17 @@ function netlifyRedirectsPlugin() {
       const raw = String(process.env.VITE_API_URL || "")
         .trim()
         .replace(/\/$/, "");
-      if (!raw) return;
-      const lines = [`/api/*  ${raw}/api/:splat  200`, `/*  /index.html  200`];
+      const lines = [];
+      if (raw) {
+        lines.push(`/api/*  ${raw}/api/:splat  200`);
+      }
+      lines.push("/*  /index.html  200");
       writeFileSync(resolve(outDir, "_redirects"), `${lines.join("\n")}\n`, "utf8");
     },
   };
 }
 
 export default defineConfig(({ mode }) => {
-  assertNetlifyApiUrl();
   return {
   plugins: [react(), netlifyRedirectsPlugin()],
   server: {
