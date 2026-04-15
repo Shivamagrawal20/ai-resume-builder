@@ -14,6 +14,7 @@ export async function getResume(userId, resumeId) {
   return resume;
 }
 
+
 export async function createResume(userId, { title, content }) {
   const resume = await Resume.create({ userId, title, content: content ?? {} });
   return resume.toObject();
