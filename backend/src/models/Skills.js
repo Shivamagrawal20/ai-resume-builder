@@ -9,5 +9,6 @@ const skillSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+
 export const Skill =
   mongoose.models.Skill || mongoose.model("Skill", skillSchema);
